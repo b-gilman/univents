@@ -131,6 +131,12 @@ where coalesce(e.ends_at, e.starts_at + interval '4 hours') >= now()
 order by e.starts_at;
 
 
+-- Let the website read these (RLS above still decides WHICH rows it sees).
+-- Supabase often grants this automatically; being explicit makes sure.
+grant select on public.organizations, public.events, public.upcoming_events
+  to anon, authenticated;
+
+
 -- -----------------------------------------------------------------------------
 -- 5. Storage bucket for event posters/photos
 --

@@ -14,17 +14,18 @@ export default function EventCard({ event }: { event: EventListItem }) {
   return (
     <article className="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-black/5">
       {event.image_url && (
-        <div className="relative aspect-video bg-neutral-200">
-          {/* unoptimized: show the image straight from its link, so posters
-              can be hosted anywhere (Supabase Storage, Instagram, etc.). */}
-          <Image
-            src={event.image_url}
-            alt=""
-            fill
-            unoptimized
-            className="object-cover"
-          />
-        </div>
+        // Shown at its natural shape (square/portrait posters aren't cropped).
+        // width/height only reserve space until the real image loads.
+        // unoptimized: show the image straight from its link, so posters can
+        // be hosted anywhere (this site, Supabase Storage, etc.).
+        <Image
+          src={event.image_url}
+          alt=""
+          width={1080}
+          height={1080}
+          unoptimized
+          className="h-auto max-h-[36rem] w-full bg-neutral-200 object-cover"
+        />
       )}
 
       <div className="flex flex-col gap-3 p-4">

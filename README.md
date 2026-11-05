@@ -36,6 +36,10 @@ edit the values and run it, or add a row in **Table Editor → events**.
 Posters go in **Storage → event-images**; paste the file's public URL into
 `image_url`.
 
+Batches of real club events live in `supabase/events/` (one SQL file per
+batch, safe to run twice). Their posters are in `public/events/` and are
+referenced as `/events/<file>.webp`.
+
 ## Useful commands
 
 | Command         | What it does                            |
