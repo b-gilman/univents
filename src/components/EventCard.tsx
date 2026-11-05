@@ -1,0 +1,105 @@
+import Image from "next/image";
+import {
+  type EventListItem,
+  dateBadge,
+  formatEventTime,
+  formatPlace,
+  formatPrice,
+} from "@/lib/events";
+
+export default function EventCard({ event }: { event: EventListItem }) {
+  const badge = dateBadge(event.starts_at);
+  const price = formatPrice(event.price_cents);
+
+  return (
+    <article className="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-black/5">
+      {event.image_url && (
+        <div className="relative aspect-video bg-neutral-200">
+          {/* unoptimized: show the image straight from its link, so posters
+              can be hosted anywhere (Supabase Storage, Instagram, etc.). */}
+          <Image
+            src={event.image_url}
+            alt=""
+            fill
+            unoptimized
+            className="object-cover"
+          />
+        </div>
+      )}
+
+      <div className="flex flex-col gap-3 p-4">
+        <div className="flex items-start gap-3">
+          <div
+            className="flex w-12 shrink-0 flex-col items-center rounded-xl bg-concordia py-1.5 text-white"
+            aria-hidden="true"
+          >
+            <span className="text-[11px] font-semibold tracking-wider">
+              {badge.month}
+            </span>
+            <span className="text-xl font-bold leading-none">{badge.day}</span>
+          </div>
+
+          <div className="min-w-0 flex-1">
+            <h3 className="text-lg font-semibold leading-snug text-neutral-900">
+              {event.title}
+            </h3>
+            {event.organization_name && (
+              <p className="truncate text-sm text-neutral-500">
+                by {event.organization_name}
+              </p>
+            )}
+          </div>
+        </div>
+
+        <dl className="space-y-1 text-sm text-neutral-700">
+          <div className="flex gap-2">
+            <dt className="sr-only">When</dt>
+            <span aria-hidden="true">🕒</span>
+            <dd>
+              <time dateTime={event.starts_at}>
+                {formatEventTime(event.starts_at, event.ends_at)}
+              </time>
+            </dd>
+          </div>
+          <div className="flex gap-2">
+            <dt className="sr-only">Where</dt>
+            <span aria-hidden="true">📍</span>
+            <dd>{formatPlace(event.campus, event.location)}</dd>
+          </div>
+        </dl>
+
+        {event.description && (
+          <p className="line-clamp-3 text-sm leading-relaxed text-neutral-600">
+            {event.description}
+          </p>
+        )}
+
+        <div className="flex flex-wrap items-center gap-2">
+          <span
+            className={
+              price === "Free"
+                ? "rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700"
+                : "rounded-full bg-neutral-100 px-2.5 py-1 text-xs font-semibold text-neutral-800"
+            }
+          >
+            {price}
+          </span>
+          <span className="rounded-full bg-concordia/10 px-2.5 py-1 text-xs font-semibold capitalize text-concordia">
+            {event.category}
+          </span>
+        </div>
+
+        {event.signup_url && (
+          <a
+            href={event.signup_url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-1 flex min-h-11 items-center justify-center rounded-xl bg-concordia px-4 text-base font-semibold text-white active:opacity-80"
+          >
+            {price === "Free" ? "Sign up" : "Get tickets"}
+          </a>
+        )}
+      </div>
+    </article>
+  );
+}

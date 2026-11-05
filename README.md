@@ -3,7 +3,8 @@
 A mobile-first events site for Concordia University, built with
 [Next.js](https://nextjs.org) (App Router), TypeScript, Tailwind CSS and Supabase.
 
-> Status: placeholder "coming soon" page only.
+> Status: homepage lists upcoming events from Supabase. Events are added by
+> the admin in the Supabase dashboard (no accounts yet).
 
 ## Run it locally
 
@@ -22,6 +23,19 @@ A mobile-first events site for Concordia University, built with
    npm run dev
    ```
 
+## Database (Supabase)
+
+One-time setup: in the Supabase dashboard open **SQL Editor → New query**,
+paste the contents of `supabase/migrations/20261105000000_create_events.sql`
+and click **Run**. This creates the `organizations` and `events` tables, the
+`upcoming_events` view used by the homepage, read-only security rules, and an
+`event-images` storage bucket.
+
+To add an event, copy `supabase/add-event-template.sql` into the SQL Editor,
+edit the values and run it, or add a row in **Table Editor → events**.
+Posters go in **Storage → event-images**; paste the file's public URL into
+`image_url`.
+
 ## Useful commands
 
 | Command         | What it does                            |
@@ -36,4 +50,7 @@ A mobile-first events site for Concordia University, built with
 - `src/app/page.tsx` — the homepage
 - `src/app/layout.tsx` — shared wrapper for every page (title, theme colour)
 - `src/app/globals.css` — global styles and the `concordia` colour
+- `src/components/EventCard.tsx` — one event card
+- `src/lib/events.ts` — loads events and formats dates/prices
 - `src/lib/supabase.ts` — the shared Supabase client
+- `supabase/` — database setup SQL and the add-an-event template
