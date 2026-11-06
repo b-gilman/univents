@@ -20,14 +20,22 @@ import {
 
 const initial: SubmitState = { status: "idle" };
 
+// Used two ways:
+//  - public form (/school/submit): anyone, goes to the admin for review
+//  - organiser form: a club's organiser posting for their club (`organisation`
+//    set, `action` = the organiser action). Verified clubs publish instantly.
 export default function SubmitForm({
   schoolId,
   campuses,
+  action: serverAction = submitEvent,
+  organisation,
 }: {
   schoolId: string;
   campuses: string[];
+  action?: (prev: SubmitState, fd: FormData) => Promise<SubmitState>;
+  organisation?: { id: string; name: string; verified: boolean };
 }) {
-  const [state, dispatch, pending] = useActionState(submitEvent, initial);
+  const [state, dispatch, pending] = useActionState(serverAction, initial);
   const [preparing, setPreparing] = useState(false);
 
   const values = state.status === "error" ? state.values : {};
@@ -40,7 +48,17 @@ export default function SubmitForm({
 
   if (state.status === "success")
     return (
-      <Success title={state.title} dates={state.dates} schoolId={schoolId} />
+      <Success
+        title={state.title}
+        dates={state.dates}
+        published={Boolean(state.published)}
+        backHref={
+          organisation ? `/organize/${organisation.id}` : `/${schoolId}`
+        }
+        backLabel={
+          organisation ? `Back to ${organisation.name}` : "Back to all events"
+        }
+      />
     );
 
   // Before sending: shrink big photos so they upload fast and fit the limit.
@@ -71,46 +89,66 @@ export default function SubmitForm({
       )}
 
       <input type="hidden" name="school" value={schoolId} />
+      {organisation && (
+        <input type="hidden" name="org_id" value={organisation.id} />
+      )}
+      {organisation && (
+        <p className="rounded-xl bg-white px-4 py-3 text-sm text-neutral-700 ring-1 ring-black/5">
+          Posting as <strong>{organisation.name}</strong>.{" "}
+          {organisation.verified
+            ? "Your club is verified, so the event goes live right away."
+            : "It'll go live after a quick review by the Univents admin."}
+        </p>
+      )}
 
-      {/* Spam trap: hidden from people, bots fill it in. */}
-      <div
-        aria-hidden="true"
-        className="absolute -left-[9999px] h-px w-px overflow-hidden"
-      >
-        <label>
-          Website{" "}
-          <input type="text" name="website" tabIndex={-1} autoComplete="off" />
-        </label>
-      </div>
+      {!organisation && (
+        <>
+          {/* Spam trap: hidden from people, bots fill it in. */}
+          <div
+            aria-hidden="true"
+            className="absolute -left-[9999px] h-px w-px overflow-hidden"
+          >
+            <label>
+              Website{" "}
+              <input
+                type="text"
+                name="website"
+                tabIndex={-1}
+                autoComplete="off"
+              />
+            </label>
+          </div>
 
-      <Section title="Your club">
-        <Field label="Club or organization" error={errors.club_name}>
-          <input
-            name="club_name"
-            required
-            maxLength={LIMITS.clubName}
-            defaultValue={v("club_name")}
-            placeholder="e.g. Chess Club"
-            className={inputClass}
-          />
-        </Field>
-        <Field
-          label="Contact email"
-          hint="Only you and the site admin see this."
-          error={errors.contact_email}
-        >
-          <input
-            name="contact_email"
-            type="email"
-            required
-            maxLength={LIMITS.email}
-            defaultValue={v("contact_email")}
-            autoComplete="email"
-            inputMode="email"
-            className={inputClass}
-          />
-        </Field>
-      </Section>
+          <Section title="Your club">
+            <Field label="Club or organization" error={errors.club_name}>
+              <input
+                name="club_name"
+                required
+                maxLength={LIMITS.clubName}
+                defaultValue={v("club_name")}
+                placeholder="e.g. Chess Club"
+                className={inputClass}
+              />
+            </Field>
+            <Field
+              label="Contact email"
+              hint="Only you and the site admin see this."
+              error={errors.contact_email}
+            >
+              <input
+                name="contact_email"
+                type="email"
+                required
+                maxLength={LIMITS.email}
+                defaultValue={v("contact_email")}
+                autoComplete="email"
+                inputMode="email"
+                className={inputClass}
+              />
+            </Field>
+          </Section>
+        </>
+      )}
 
       <Section title="The event">
         <Field label="Event name" error={errors.title}>
@@ -353,25 +391,27 @@ export default function SubmitForm({
         </Field>
       </Section>
 
-      <div className="flex flex-col gap-2">
-        <label className="flex items-start gap-3">
-          <input
-            type="checkbox"
-            name="permission"
-            value="yes"
-            required
-            defaultChecked={v("permission") === "yes"}
-            className="mt-0.5 h-5 w-5 shrink-0 accent-brand"
-          />
-          <span className="text-sm">
-            I&apos;m part of this club or have its permission to post this event
-            and poster.
-          </span>
-        </label>
-        {errors.permission && (
-          <p className="text-sm text-red-700">{errors.permission}</p>
-        )}
-      </div>
+      {!organisation && (
+        <div className="flex flex-col gap-2">
+          <label className="flex items-start gap-3">
+            <input
+              type="checkbox"
+              name="permission"
+              value="yes"
+              required
+              defaultChecked={v("permission") === "yes"}
+              className="mt-0.5 h-5 w-5 shrink-0 accent-brand"
+            />
+            <span className="text-sm">
+              I&apos;m part of this club or have its permission to post this
+              event and poster.
+            </span>
+          </label>
+          {errors.permission && (
+            <p className="text-sm text-red-700">{errors.permission}</p>
+          )}
+        </div>
+      )}
 
       <button
         type="submit"
@@ -429,21 +469,35 @@ function Field({
 function Success({
   title,
   dates,
-  schoolId,
+  published,
+  backHref,
+  backLabel,
 }: {
   title: string;
   dates: string[];
-  schoolId: string;
+  published: boolean;
+  backHref: string;
+  backLabel: string;
 }) {
   return (
     <div className="rounded-2xl bg-white p-6 text-center shadow-sm ring-1 ring-black/5">
       <p className="text-3xl" aria-hidden="true">
         🎉
       </p>
-      <h2 className="mt-2 text-xl font-bold">Thanks! Event submitted</h2>
+      <h2 className="mt-2 text-xl font-bold">
+        {published ? "Published!" : "Thanks! Event submitted"}
+      </h2>
       <p className="mt-2 text-neutral-600">
-        <strong>{title}</strong> will appear on the site once it&apos;s been
-        reviewed, usually within a day.
+        {published ? (
+          <>
+            <strong>{title}</strong> is now live on the site.
+          </>
+        ) : (
+          <>
+            <strong>{title}</strong> will appear on the site once it&apos;s been
+            reviewed, usually within a day.
+          </>
+        )}
       </p>
       {dates.length > 0 && (
         <ul className="mt-4 space-y-1 text-sm text-neutral-700">
@@ -462,10 +516,10 @@ function Success({
           Submit another event
         </button>
         <Link
-          href={`/${schoolId}`}
+          href={backHref}
           className="flex min-h-11 items-center justify-center rounded-xl font-semibold text-brand"
         >
-          Back to all events
+          {backLabel}
         </Link>
       </div>
     </div>

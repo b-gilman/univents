@@ -45,4 +45,4 @@ export type SubmitState =
       errors: Record<string, string>;
       values: Record<string, string | string[]>;
     }
-  | { status: "success"; title: string; dates: string[] };
+  | { status: "success"; title: string; dates: string[]; published?: boolean };

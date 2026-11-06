@@ -45,16 +45,26 @@ async function PendingList() {
     console.error("Admin: failed to load pending events", err);
     return (
       <p className="rounded-2xl bg-red-50 p-4 text-red-800">
-        Couldn&apos;t load submissions. Check that SUPABASE_SECRET_KEY is set on Vercel and the
-        latest migration has been run.
+        Couldn&apos;t load submissions. Check that SUPABASE_SECRET_KEY is set on
+        Vercel and the latest migration has been run.
       </p>
     );
   }
 
   return (
     <>
+      <Link
+        href="/admin/organisers"
+        className="mb-4 flex min-h-11 items-center justify-between rounded-xl bg-white px-4 font-semibold shadow-sm ring-1 ring-black/5 active:bg-neutral-50"
+      >
+        Clubs and organisers{" "}
+        <span aria-hidden="true" className="text-neutral-400">
+          ›
+        </span>
+      </Link>
       <h1 className="mb-4 text-xl font-bold">
-        Waiting for review <span className="text-neutral-500">({groups.length})</span>
+        Waiting for review{" "}
+        <span className="text-neutral-500">({groups.length})</span>
       </h1>
       {groups.length === 0 ? (
         <p className="rounded-2xl bg-white p-6 text-center text-neutral-600 shadow-sm ring-1 ring-black/5">
@@ -64,7 +74,10 @@ async function PendingList() {
         <ul className="flex flex-col gap-4">
           {groups.map((g) => (
             <li key={g.key}>
-              <PendingCard group={g} school={schools.find((s) => s.id === g.events[0].school_id)} />
+              <PendingCard
+                group={g}
+                school={schools.find((s) => s.id === g.events[0].school_id)}
+              />
             </li>
           ))}
         </ul>
@@ -73,20 +86,34 @@ async function PendingList() {
   );
 }
 
-function PendingCard({ group, school }: { group: PendingGroup; school?: School }) {
+function PendingCard({
+  group,
+  school,
+}: {
+  group: PendingGroup;
+  school?: School;
+}) {
   const e = group.events[0];
   const sub = group.submission;
   return (
     <article className="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-black/5">
       {e.image_url && (
-        <Image src={e.image_url} alt="" width={1080} height={1080} unoptimized
-          className="h-auto max-h-80 w-full bg-neutral-200 object-contain" />
+        <Image
+          src={e.image_url}
+          alt=""
+          width={1080}
+          height={1080}
+          unoptimized
+          className="h-auto max-h-80 w-full bg-neutral-200 object-contain"
+        />
       )}
       <div className="flex flex-col gap-3 p-4 text-sm">
         <div>
           {school && (
-            <p className="mb-1 inline-block rounded-full px-2.5 py-0.5 text-xs font-semibold text-white"
-              style={{ backgroundColor: school.primary_color }}>
+            <p
+              className="mb-1 inline-block rounded-full px-2.5 py-0.5 text-xs font-semibold text-white"
+              style={{ backgroundColor: school.primary_color }}
+            >
               {school.short_name}
             </p>
           )}
@@ -97,14 +124,19 @@ function PendingCard({ group, school }: { group: PendingGroup; school?: School }
               {group.matchedOrg ? (
                 <span className="text-emerald-700">· existing club</span>
               ) : (
-                <span className="text-amber-700">· new club (created on approval)</span>
+                <span className="text-amber-700">
+                  · new club (created on approval)
+                </span>
               )}
             </p>
           )}
           {sub && (
             <p className="text-neutral-600">
               Contact:{" "}
-              <a href={`mailto:${sub.contact_email}`} className="text-brand underline">
+              <a
+                href={`mailto:${sub.contact_email}`}
+                className="text-brand underline"
+              >
                 {sub.contact_email}
               </a>
             </p>
@@ -113,32 +145,48 @@ function PendingCard({ group, school }: { group: PendingGroup; school?: School }
 
         <div>
           <p className="font-medium">
-            {group.events.length === 1 ? "When" : `${group.events.length} dates`}
+            {group.events.length === 1
+              ? "When"
+              : `${group.events.length} dates`}
           </p>
           <ul className="text-neutral-700">
             {group.events.slice(0, 8).map((d) => (
               <li key={d.id}>{formatEventTime(d.starts_at, d.ends_at)}</li>
             ))}
-            {group.events.length > 8 && <li>+ {group.events.length - 8} more</li>}
+            {group.events.length > 8 && (
+              <li>+ {group.events.length - 8} more</li>
+            )}
           </ul>
         </div>
 
         <p className="text-neutral-700">
-          📍 {formatPlace(e.campus, e.location)} · {formatPrice(e.price_cents)} ·{" "}
-          <span className="capitalize">{e.category}</span>
+          📍 {formatPlace(e.campus, e.location)} · {formatPrice(e.price_cents)}{" "}
+          · <span className="capitalize">{e.category}</span>
         </p>
         {e.description && (
-          <p className="whitespace-pre-line text-neutral-700">{e.description}</p>
+          <p className="whitespace-pre-line text-neutral-700">
+            {e.description}
+          </p>
         )}
         {(e.signup_url || e.info_url) && (
           <div className="flex flex-col gap-1 break-all">
             {e.signup_url && (
-              <a href={e.signup_url} target="_blank" rel="noopener noreferrer" className="text-brand underline">
+              <a
+                href={e.signup_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-brand underline"
+              >
                 Sign-up link: {e.signup_url}
               </a>
             )}
             {e.info_url && (
-              <a href={e.info_url} target="_blank" rel="noopener noreferrer" className="text-brand underline">
+              <a
+                href={e.info_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-brand underline"
+              >
                 Post link: {e.info_url}
               </a>
             )}
@@ -146,26 +194,38 @@ function PendingCard({ group, school }: { group: PendingGroup; school?: School }
         )}
         {sub && (
           <p className="text-xs text-neutral-500">
-            Submitted {new Date(sub.created_at).toLocaleString("en-CA", { timeZone: "America/Montreal" })}
+            Submitted{" "}
+            {new Date(sub.created_at).toLocaleString("en-CA", {
+              timeZone: "America/Montreal",
+            })}
           </p>
         )}
 
         <div className="mt-1 grid grid-cols-3 gap-2">
           <form action={approveSubmission} className="col-span-3">
             <input type="hidden" name="submission_id" value={group.key} />
-            <button type="submit"
-              className="min-h-12 w-full rounded-xl bg-emerald-600 px-4 font-semibold text-white active:opacity-80">
-              Approve{group.events.length > 1 ? ` all ${group.events.length} dates` : ""}
+            <button
+              type="submit"
+              className="min-h-12 w-full rounded-xl bg-emerald-600 px-4 font-semibold text-white active:opacity-80"
+            >
+              Approve
+              {group.events.length > 1
+                ? ` all ${group.events.length} dates`
+                : ""}
             </button>
           </form>
-          <Link href={`/admin/${group.key}`}
-            className="col-span-2 flex min-h-11 items-center justify-center rounded-xl font-semibold ring-1 ring-black/15 active:bg-neutral-100">
+          <Link
+            href={`/admin/${group.key}`}
+            className="col-span-2 flex min-h-11 items-center justify-center rounded-xl font-semibold ring-1 ring-black/15 active:bg-neutral-100"
+          >
             Edit
           </Link>
           <form action={rejectSubmission}>
             <input type="hidden" name="submission_id" value={group.key} />
-            <ConfirmButton message={`Reject “${e.title}”? It won't appear on the site.`}
-              className="min-h-11 w-full rounded-xl font-semibold text-red-700 ring-1 ring-red-200 active:bg-red-50">
+            <ConfirmButton
+              message={`Reject “${e.title}”? It won't appear on the site.`}
+              className="min-h-11 w-full rounded-xl font-semibold text-red-700 ring-1 ring-red-200 active:bg-red-50"
+            >
               Reject
             </ConfirmButton>
           </form>

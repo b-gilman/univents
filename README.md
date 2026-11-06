@@ -63,6 +63,15 @@ Supabase setting: **Authentication → Sign In / Providers → Email →
 "Confirm email" off**, until a custom email sender (e.g. Resend) is set up;
 Supabase's built-in email only reaches your own team.
 
+## Organiser accounts
+
+Club organisers are normal student accounts linked to a club. The admin adds
+them on `/admin/organisers` (by the email they signed up with) and can mark a
+club **verified**. Organisers use `/organize`: post events (verified clubs go
+live instantly, others go to the admin review queue), edit/delete their club's
+events, and see the names of students who RSVP'd (never emails). Enforced by
+row-level security; see `supabase/migrations/20261111000000_organisers.sql`.
+
 ## Event submissions and admin
 
 - **`/<school>/submit`**: public form where clubs send in events (with poster upload).

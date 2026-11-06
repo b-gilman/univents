@@ -11,6 +11,7 @@ import {
 } from "@/lib/events";
 import { getSchool } from "@/lib/schools";
 import { getCurrentUser, supabaseForUser } from "@/lib/server/auth";
+import { myOrganisations } from "@/lib/server/organisers";
 import { SITE } from "@/lib/site";
 import { logOut } from "./actions";
 
@@ -46,6 +47,7 @@ async function AccountContent() {
   const user = await getCurrentUser();
   if (!user) redirect("/login?next=/account");
   const school = user.schoolId ? await getSchool(user.schoolId) : null;
+  const organises = await myOrganisations();
 
   // My RSVPs, then the events they're for (soonest first).
   const supabase = await supabaseForUser();
@@ -100,6 +102,23 @@ async function AccountContent() {
             <h2 className="mb-2 font-semibold text-neutral-500">Past</h2>
             <EventRows events={past.slice(0, 20)} muted />
           </section>
+        )}
+
+        {organises.length > 0 && (
+          <Link
+            href="/organize"
+            className="flex min-h-14 items-center justify-between gap-3 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-black/5 active:bg-neutral-50"
+          >
+            <span>
+              <span className="block font-semibold">Organiser dashboard</span>
+              <span className="block text-sm text-neutral-600">
+                {organises.map((o) => o.name).join(", ")}
+              </span>
+            </span>
+            <span aria-hidden="true" className="text-neutral-400">
+              ›
+            </span>
+          </Link>
         )}
 
         <div className="rounded-2xl bg-white p-4 text-sm shadow-sm ring-1 ring-black/5">

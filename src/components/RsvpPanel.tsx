@@ -65,6 +65,9 @@ export default async function RsvpPanel({
         {countText && <>👥 {countText}</>}
         {!user && <> · Log in to RSVP</>}
       </p>
+      <p className="text-center text-xs text-neutral-500">
+        The club hosting this event can see the names of people going.
+      </p>
     </div>
   );
 }
