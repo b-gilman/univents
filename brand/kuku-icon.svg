@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+  <rect width="1024" height="1024" fill="#4338CA"/>
+  <path d="M232 300a96 96 0 0 1 96-96h368a96 96 0 0 1 96 96v280a96 96 0 0 1-96 96H470l-150 120 26-120h-18a96 96 0 0 1-96-96z" fill="#FFFFFF"/>
+  <text x="512" y="545" text-anchor="middle" font-family="Inter Display, Inter" font-weight="900" font-size="300" letter-spacing="-12" fill="#4338CA">ku</text>
+  <circle cx="776" cy="214" r="62" fill="#FBBF24" stroke="#4338CA" stroke-width="22"/>
+</svg>
