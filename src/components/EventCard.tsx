@@ -1,13 +1,23 @@
 import Image from "next/image";
+import type { RepeatInfo } from "@/lib/event-list";
 import {
   type EventListItem,
   dateBadge,
+  formatDay,
   formatEventTime,
   formatPlace,
   formatPrice,
 } from "@/lib/events";
 
-export default function EventCard({ event }: { event: EventListItem }) {
+// `event` is the next (soonest) occurrence. `repeat` is set when the same
+// event happens several times (e.g. weekly meetings), shown as one card.
+export default function EventCard({
+  event,
+  repeat = null,
+}: {
+  event: EventListItem;
+  repeat?: RepeatInfo | null;
+}) {
   const badge = dateBadge(event.starts_at);
   const price = formatPrice(event.price_cents);
 
@@ -57,11 +67,30 @@ export default function EventCard({ event }: { event: EventListItem }) {
             <dt className="sr-only">When</dt>
             <span aria-hidden="true">🕒</span>
             <dd>
-              <time dateTime={event.starts_at}>
-                {formatEventTime(event.starts_at, event.ends_at)}
-              </time>
+              {repeat ? (
+                repeat.schedule
+              ) : (
+                <time dateTime={event.starts_at}>
+                  {formatEventTime(event.starts_at, event.ends_at)}
+                </time>
+              )}
             </dd>
           </div>
+          {repeat && (
+            <div className="flex gap-2">
+              <dt className="sr-only">Next date</dt>
+              <span aria-hidden="true">🔁</span>
+              <dd>
+                Next:{" "}
+                <time dateTime={event.starts_at} className="font-medium">
+                  {formatDay(event.starts_at)}
+                </time>{" "}
+                <span className="text-neutral-500">
+                  · until {repeat.until} ({repeat.count} dates)
+                </span>
+              </dd>
+            </div>
+          )}
           <div className="flex gap-2">
             <dt className="sr-only">Where</dt>
             <span aria-hidden="true">📍</span>

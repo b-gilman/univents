@@ -42,7 +42,7 @@ export async function getUpcomingEvents(): Promise<Result> {
 
 // Concordia is in Montreal, so always show times in Montreal time, no matter
 // where the server (or the visitor's phone) is.
-const TIME_ZONE = "America/Montreal";
+export const TIME_ZONE = "America/Montreal";
 
 const dateTime = new Intl.DateTimeFormat("en-CA", {
   timeZone: TIME_ZONE,
@@ -89,4 +89,16 @@ export function formatPrice(cents: number | null) {
 
 export function formatPlace(campus: string, location: string | null) {
   return location ? `${location} · ${campus}` : campus;
+}
+
+const dayOnly = new Intl.DateTimeFormat("en-CA", {
+  timeZone: TIME_ZONE,
+  weekday: "short",
+  month: "short",
+  day: "numeric",
+});
+
+// e.g. "Fri, Nov 6"
+export function formatDay(iso: string) {
+  return dayOnly.format(new Date(iso));
 }
