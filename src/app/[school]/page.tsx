@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { connection } from "next/server";
 import { Suspense, type ReactNode } from "react";
+import AccountLink from "@/components/AccountLink";
 import EventCard from "@/components/EventCard";
 import FilterBar from "@/components/FilterBar";
 import ThemeColor from "@/components/ThemeColor";
@@ -13,6 +14,7 @@ import {
   parseFilters,
 } from "@/lib/event-list";
 import { getUpcomingEvents } from "@/lib/events";
+import { getRsvpCounts } from "@/lib/rsvps";
 import { type School, getSchool, schoolTheme } from "@/lib/schools";
 import { SITE } from "@/lib/site";
 
@@ -59,12 +61,21 @@ async function SchoolHomeContent({
             <p className="text-xs font-semibold uppercase tracking-[0.2em] text-white/70">
               {SITE.name}
             </p>
-            <Link
-              href="/?change=1"
-              className="flex min-h-10 items-center text-sm font-medium text-white/80 underline-offset-2 active:underline"
-            >
-              Change school
-            </Link>
+            <div className="flex items-center gap-3">
+              <Link
+                href="/?change=1"
+                className="flex min-h-10 items-center text-sm font-medium text-white/80 underline-offset-2 active:underline"
+              >
+                Change school
+              </Link>
+              <Suspense
+                fallback={
+                  <span className="h-10 w-20 rounded-full bg-white/15" />
+                }
+              >
+                <AccountLink returnTo={basePath} />
+              </Suspense>
+            </div>
           </div>
           <h1 className="mt-1 text-3xl font-bold tracking-tight">
             {school.name}
@@ -156,6 +167,8 @@ async function EventList({
     );
   }
 
+  const going = await getRsvpCounts(groups.map((g) => g.next.id));
+
   return (
     <>
       {hasFilters(filters) && (
@@ -166,7 +179,11 @@ async function EventList({
       <ul className="flex flex-col gap-4">
         {groups.map((group) => (
           <li key={group.key}>
-            <EventCard event={group.next} repeat={group.repeat} />
+            <EventCard
+              event={group.next}
+              repeat={group.repeat}
+              going={going.get(group.next.id) ?? 0}
+            />
           </li>
         ))}
       </ul>

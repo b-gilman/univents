@@ -19,8 +19,16 @@ export default function FilterBar({
   });
 
   const chips: { label: string; active: boolean; next: Filters }[] = [
-    { label: "Today", active: filters.when === "today", next: toggle("when", "today") },
-    { label: "This week", active: filters.when === "week", next: toggle("when", "week") },
+    {
+      label: "Today",
+      active: filters.when === "today",
+      next: toggle("when", "today"),
+    },
+    {
+      label: "This week",
+      active: filters.when === "week",
+      next: toggle("when", "week"),
+    },
     {
       label: "Free",
       active: Boolean(filters.free),
@@ -29,7 +37,10 @@ export default function FilterBar({
     ...campuses.map((campus) => ({
       label: campus,
       active: filters.campus === campus,
-      next: { ...filters, campus: filters.campus === campus ? undefined : campus },
+      next: {
+        ...filters,
+        campus: filters.campus === campus ? undefined : campus,
+      },
     })),
   ];
 

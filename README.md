@@ -49,6 +49,20 @@ cookie for a year; "Change school" switches it). To add a school, run the
 `insert into public.schools …` example at the end of
 `supabase/migrations/20261108000000_schools.sql`.
 
+## Student accounts and RSVPs
+
+Students sign up at `/signup` (full name, email, password, school) and log in
+at `/login`; this uses Supabase Auth. On an event page they tap **I'm going**;
+everyone sees the count, only the student sees their own RSVPs (`/account`,
+"My events"). Profiles and RSVPs are protected by row-level security; see
+`supabase/migrations/20261109000000_accounts_and_rsvps.sql` (it also has a
+query for the admin to list who is going to an event). `src/proxy.ts` renews
+logins before they expire.
+
+Supabase setting: **Authentication → Sign In / Providers → Email →
+"Confirm email" off**, until a custom email sender (e.g. Resend) is set up;
+Supabase's built-in email only reaches your own team.
+
 ## Event submissions and admin
 
 - **`/<school>/submit`**: public form where clubs send in events (with poster upload).

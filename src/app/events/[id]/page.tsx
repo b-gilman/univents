@@ -5,6 +5,7 @@ import { notFound } from "next/navigation";
 import { connection } from "next/server";
 import { Suspense } from "react";
 import EventPageShell from "@/components/EventPageShell";
+import RsvpPanel from "@/components/RsvpPanel";
 import ShareButton from "@/components/ShareButton";
 import { groupKey } from "@/lib/event-list";
 import { getSchool } from "@/lib/schools";
@@ -155,6 +156,13 @@ async function EventDetails({
 
           {/* Buttons */}
           <div className="flex flex-col gap-2">
+            <Suspense
+              fallback={
+                <div className="h-16 animate-pulse rounded-xl bg-neutral-100" />
+              }
+            >
+              <RsvpPanel eventId={e.id} ended={ended} />
+            </Suspense>
             {e.signup_url && !ended && (
               <a
                 href={e.signup_url}

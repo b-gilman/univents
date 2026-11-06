@@ -15,9 +15,11 @@ import {
 export default function EventCard({
   event,
   repeat = null,
+  going = 0,
 }: {
   event: EventListItem;
   repeat?: RepeatInfo | null;
+  going?: number; // how many people RSVP'd
 }) {
   const badge = dateBadge(event.starts_at);
   const price = formatPrice(event.price_cents);
@@ -97,6 +99,13 @@ export default function EventCard({
             <span aria-hidden="true">📍</span>
             <dd>{formatPlace(event.campus, event.location)}</dd>
           </div>
+          {going > 0 && (
+            <div className="flex gap-2">
+              <dt className="sr-only">Going</dt>
+              <span aria-hidden="true">👥</span>
+              <dd>{going} going</dd>
+            </div>
+          )}
         </dl>
 
         {event.description && (

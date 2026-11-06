@@ -6,7 +6,9 @@ import { useEffect } from "react";
 // while this page is open. The site default comes from the root layout.
 export default function ThemeColor({ color }: { color: string }) {
   useEffect(() => {
-    let tag = document.querySelector<HTMLMetaElement>('meta[name="theme-color"]');
+    let tag = document.querySelector<HTMLMetaElement>(
+      'meta[name="theme-color"]',
+    );
     if (!tag) {
       tag = document.createElement("meta");
       tag.name = "theme-color";
