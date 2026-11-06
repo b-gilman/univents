@@ -1,157 +1,85 @@
-import { Suspense, type ReactNode } from "react";
-import Link from "next/link";
-import { connection } from "next/server";
-import EventCard from "@/components/EventCard";
-import FilterBar from "@/components/FilterBar";
-import { getUpcomingEvents } from "@/lib/events";
+import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
+import { Suspense } from "react";
+import { SCHOOL_COOKIE, getSchools, schoolTheme } from "@/lib/schools";
 import { SITE } from "@/lib/site";
-import {
-  applyFilters,
-  groupEvents,
-  hasFilters,
-  parseFilters,
-} from "@/lib/event-list";
+import { chooseSchool } from "./school-actions";
 
-// The homepage. Styles are written "mobile first": the plain Tailwind classes
-// apply to phones, and prefixed ones like `sm:` only kick in on wider screens.
-export default function Home({ searchParams }: PageProps<"/">) {
+// The front door. Returning visitors go straight to their school's page;
+// first-time visitors (or "Change school") pick from the list.
+export default function Home(props: PageProps<"/">) {
   return (
     <div className="flex min-h-dvh flex-1 flex-col bg-neutral-100 text-neutral-900">
-      {/* This header doesn't need the database, so it's sent instantly. */}
-      <header className="bg-brand px-5 pt-[max(env(safe-area-inset-top),2rem)] pb-7 text-white">
+      <header className="bg-brand px-5 pt-[max(env(safe-area-inset-top),2rem)] pb-8 text-white">
         <div className="mx-auto max-w-xl">
           <h1 className="text-3xl font-bold tracking-tight">{SITE.name}</h1>
           <p className="mt-2 text-white/85">{SITE.tagline}</p>
-          <Link
-            href="/submit"
-            className="mt-4 inline-flex min-h-10 items-center rounded-full bg-white/15 px-4 text-sm font-semibold active:bg-white/25"
-          >
-            Hosting an event? Submit it →
-          </Link>
         </div>
       </header>
-
-      <main className="mx-auto w-full max-w-xl flex-1 px-4 pb-[max(env(safe-area-inset-bottom),2rem)]">
-        {/* Filter buttons stay pinned to the top while you scroll. */}
-        <div className="sticky top-0 z-10 -mx-4 bg-neutral-100/95 px-4 pt-4 pb-3 backdrop-blur">
-          {/* The address (?when=…) is only known per visit, so the active
-              state streams in; until then the plain buttons are shown. */}
-          <Suspense fallback={<FilterBar filters={{}} />}>
-            <ActiveFilterBar searchParams={searchParams} />
-          </Suspense>
-        </div>
-
-        <h2 className="mt-2 mb-4 text-lg font-semibold">Upcoming events</h2>
-
-        {/* Suspense shows the skeleton immediately, then swaps in the real
-            list as soon as Supabase answers. */}
-        <Suspense fallback={<EventListSkeleton />}>
-          <EventList searchParams={searchParams} />
-        </Suspense>
-
-        <Link
-          href="/submit"
-          className="mt-6 flex flex-col items-center rounded-2xl border-2 border-dashed border-brand/25 p-5 text-center active:bg-white"
+      <main className="mx-auto w-full max-w-xl flex-1 px-4 pt-6 pb-[max(env(safe-area-inset-bottom),2rem)]">
+        <h2 className="mb-3 text-lg font-semibold">Choose your school</h2>
+        <Suspense
+          fallback={
+            <div className="h-20 animate-pulse rounded-2xl bg-white ring-1 ring-black/5" />
+          }
         >
-          <span className="font-semibold text-brand">Hosting an event?</span>
-          <span className="text-sm text-neutral-600">Submit it to be listed here →</span>
-        </Link>
+          <SchoolPicker {...props} />
+        </Suspense>
       </main>
     </div>
   );
 }
 
-async function ActiveFilterBar({
-  searchParams,
-}: {
-  searchParams: PageProps<"/">["searchParams"];
-}) {
-  return <FilterBar filters={parseFilters(await searchParams)} />;
-}
+async function SchoolPicker({ searchParams }: PageProps<"/">) {
+  const changing = (await searchParams).change === "1";
+  const schools = await getSchools();
+  const saved = (await cookies()).get(SCHOOL_COOKIE)?.value;
 
-async function EventList({
-  searchParams,
-}: {
-  searchParams: PageProps<"/">["searchParams"];
-}) {
-  // Tells Next.js to load fresh events on every visit (not once at build
-  // time), so new events show up as soon as you add them in Supabase.
-  await connection();
-  const filters = parseFilters(await searchParams);
-  const result = await getUpcomingEvents();
+  if (!changing && saved && schools?.some((s) => s.id === saved))
+    redirect(`/${saved}`);
 
-  if (!result.ok) {
+  if (!schools || schools.length === 0) {
     return (
-      <Notice title="Couldn't load events">
-        Something went wrong on our end. Please try again in a minute.
-      </Notice>
-    );
-  }
-
-  if (result.events.length === 0) {
-    return (
-      <Notice title="No upcoming events yet">
-        New events are on the way — check back soon!
-      </Notice>
-    );
-  }
-
-  // Filter individual dates first, then merge repeats into one card each.
-  const groups = groupEvents(applyFilters(result.events, filters, new Date()));
-
-  if (groups.length === 0) {
-    return (
-      <Notice title="Nothing matches these filters">
-        Try removing a filter, or{" "}
-        <Link href="/" scroll={false} className="font-semibold text-brand underline">
-          see all events
-        </Link>
-        .
-      </Notice>
+      <p className="rounded-2xl bg-white p-6 text-center text-neutral-600 shadow-sm ring-1 ring-black/5">
+        Couldn&apos;t load schools. Please try again in a minute.
+      </p>
     );
   }
 
   return (
-    <>
-      {hasFilters(filters) && (
-        <p className="-mt-2 mb-3 text-sm text-neutral-500">
-          {groups.length} {groups.length === 1 ? "event" : "events"}
-        </p>
-      )}
-      <ul className="flex flex-col gap-4">
-        {groups.map((group) => (
-          <li key={group.key}>
-            <EventCard event={group.next} repeat={group.repeat} />
-          </li>
-        ))}
-      </ul>
-    </>
-  );
-}
-
-function Notice({
-  title,
-  children,
-}: {
-  title: string;
-  children: ReactNode;
-}) {
-  return (
-    <div className="rounded-2xl bg-white p-6 text-center shadow-sm ring-1 ring-black/5">
-      <p className="font-semibold">{title}</p>
-      <p className="mt-1 text-sm text-neutral-600">{children}</p>
-    </div>
-  );
-}
-
-function EventListSkeleton() {
-  return (
-    <ul className="flex flex-col gap-4" aria-label="Loading events">
-      {[0, 1, 2].map((i) => (
-        <li
-          key={i}
-          className="h-40 animate-pulse rounded-2xl bg-white ring-1 ring-black/5"
-        />
+    <ul className="flex flex-col gap-3">
+      {schools.map((school) => (
+        <li key={school.id}>
+          <form action={chooseSchool}>
+            <input type="hidden" name="school" value={school.id} />
+            <button
+              type="submit"
+              style={schoolTheme(school)}
+              className="flex min-h-16 w-full items-center gap-4 rounded-2xl bg-white p-4 text-left shadow-sm ring-1 ring-black/5 active:bg-neutral-50"
+            >
+              <span
+                aria-hidden="true"
+                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-brand text-lg font-bold text-white"
+              >
+                {school.short_name[0]}
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="block font-semibold">{school.name}</span>
+                {school.campuses.length > 0 && (
+                  <span className="block truncate text-sm text-neutral-500">
+                    {school.campuses.join(" · ")}
+                  </span>
+                )}
+              </span>
+              {saved === school.id && (
+                <span className="text-sm font-medium text-brand">Current</span>
+              )}
+              <span aria-hidden="true" className="text-neutral-400">
+                ›
+              </span>
+            </button>
+          </form>
+        </li>
       ))}
     </ul>
   );

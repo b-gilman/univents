@@ -3,36 +3,34 @@ import { type Filters, filtersHref, hasFilters } from "@/lib/event-list";
 
 // The row of filter buttons. Each button is a link to the same page with that
 // filter switched on or off, so it works without any JavaScript.
-export default function FilterBar({ filters }: { filters: Filters }) {
+// `campuses` = the school's own campuses (e.g. SGW, Loyola).
+export default function FilterBar({
+  filters,
+  campuses,
+  basePath,
+}: {
+  filters: Filters;
+  campuses: string[];
+  basePath: string;
+}) {
+  const toggle = (key: "when", value: "today" | "week") => ({
+    ...filters,
+    [key]: filters[key] === value ? undefined : value,
+  });
+
   const chips: { label: string; active: boolean; next: Filters }[] = [
-    {
-      label: "Today",
-      active: filters.when === "today",
-      next: { ...filters, when: filters.when === "today" ? undefined : "today" },
-    },
-    {
-      label: "This week",
-      active: filters.when === "week",
-      next: { ...filters, when: filters.when === "week" ? undefined : "week" },
-    },
+    { label: "Today", active: filters.when === "today", next: toggle("when", "today") },
+    { label: "This week", active: filters.when === "week", next: toggle("when", "week") },
     {
       label: "Free",
       active: Boolean(filters.free),
       next: { ...filters, free: filters.free ? undefined : true },
     },
-    {
-      label: "SGW",
-      active: filters.campus === "SGW",
-      next: { ...filters, campus: filters.campus === "SGW" ? undefined : "SGW" },
-    },
-    {
-      label: "Loyola",
-      active: filters.campus === "Loyola",
-      next: {
-        ...filters,
-        campus: filters.campus === "Loyola" ? undefined : "Loyola",
-      },
-    },
+    ...campuses.map((campus) => ({
+      label: campus,
+      active: filters.campus === campus,
+      next: { ...filters, campus: filters.campus === campus ? undefined : campus },
+    })),
   ];
 
   return (
@@ -43,7 +41,7 @@ export default function FilterBar({ filters }: { filters: Filters }) {
       {chips.map((chip) => (
         <Link
           key={chip.label}
-          href={filtersHref(chip.next)}
+          href={filtersHref(chip.next, basePath)}
           scroll={false}
           aria-pressed={chip.active}
           className={
@@ -58,7 +56,7 @@ export default function FilterBar({ filters }: { filters: Filters }) {
       ))}
       {hasFilters(filters) && (
         <Link
-          href="/"
+          href={basePath}
           scroll={false}
           className="flex min-h-10 shrink-0 items-center px-3 text-sm font-semibold text-brand underline-offset-2 active:underline"
         >

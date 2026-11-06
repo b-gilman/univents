@@ -1,6 +1,10 @@
 @import "tailwindcss";
 
 :root {
+  /* Univents' own colour. Each school's pages replace it with the school's
+     colour (see schoolTheme in src/lib/schools.ts). Keep in sync with
+     brandColor in src/lib/site.ts. */
+  --brand: #4338ca;
   --background: #ffffff;
   --foreground: #171717;
 }
@@ -10,9 +14,8 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
-  /* Brand colour, used as bg-brand, text-brand, etc. Keep in sync with
-     brandColor in src/lib/site.ts. */
-  --color-brand: #4338ca;
+  /* Use it as bg-brand, text-brand, ring-brand, etc. */
+  --color-brand: var(--brand);
 }
 
 @media (prefers-color-scheme: dark) {

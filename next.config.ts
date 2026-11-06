@@ -11,6 +11,10 @@ const nextConfig: NextConfig = {
       bodySizeLimit: "4mb",
     },
   },
+  // Old links from before schools existed (they were all Concordia).
+  async redirects() {
+    return [{ source: "/submit", destination: "/concordia/submit", permanent: false }];
+  },
   turbopack: {
     rules: {
       "*.css": {

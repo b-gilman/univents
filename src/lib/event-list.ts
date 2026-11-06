@@ -3,20 +3,20 @@ import { type EventListItem, TIME_ZONE } from "@/lib/events";
 // =============================================================================
 // Filters (Today / This week / Free / SGW / Loyola)
 //
-// Filters live in the page address, e.g. /?when=week&free=1&campus=SGW, so a
+// Filters live in the page address, e.g. /concordia?when=week&campus=SGW, so a
 // filtered view can be shared or bookmarked.
 // =============================================================================
 
 export type Filters = {
   when?: "today" | "week";
   free?: boolean;
-  campus?: "SGW" | "Loyola";
+  campus?: string; // one of the school's campuses
 };
 
 type SearchParams = Record<string, string | string[] | undefined>;
 
 // Read filters from the address, ignoring anything unexpected.
-export function parseFilters(params: SearchParams): Filters {
+export function parseFilters(params: SearchParams, campuses: string[]): Filters {
   const one = (key: string) => {
     const value = params[key];
     return Array.isArray(value) ? value[0] : value;
@@ -26,7 +26,7 @@ export function parseFilters(params: SearchParams): Filters {
   return {
     when: when === "today" || when === "week" ? when : undefined,
     free: one("free") === "1" || undefined,
-    campus: campus === "SGW" || campus === "Loyola" ? campus : undefined,
+    campus: campus && campuses.includes(campus) ? campus : undefined,
   };
 }
 
@@ -34,14 +34,14 @@ export function hasFilters(f: Filters) {
   return Boolean(f.when || f.free || f.campus);
 }
 
-// Build the address for a set of filters, e.g. "/?when=today&free=1".
-export function filtersHref(f: Filters) {
+// Build the address for a set of filters, e.g. "/concordia?when=today&free=1".
+export function filtersHref(f: Filters, basePath: string) {
   const params = new URLSearchParams();
   if (f.when) params.set("when", f.when);
   if (f.free) params.set("free", "1");
   if (f.campus) params.set("campus", f.campus);
   const query = params.toString();
-  return query ? `/?${query}` : "/";
+  return query ? `${basePath}?${query}` : basePath;
 }
 
 export function applyFilters(

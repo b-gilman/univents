@@ -15,6 +15,7 @@ import {
 import { findOrCreateOrg, groupFilter, loadGroup } from "@/lib/server/admin-data";
 import { parseEventFields, parseOccurrences } from "@/lib/server/submissions";
 import { supabaseAdmin } from "@/lib/server/supabase-admin";
+import { allCampuses, getSchool } from "@/lib/schools";
 
 // ---------------------------------------------------------------- login/out
 
@@ -53,7 +54,9 @@ async function groupFromForm(fd: FormData) {
 
 export async function approveSubmission(fd: FormData) {
   const group = await groupFromForm(fd);
-  const organization_id = group.submission ? await findOrCreateOrg(group.submission.org_name) : null;
+  const organization_id = group.submission
+    ? await findOrCreateOrg(group.submission.org_name, group.events[0].school_id)
+    : null;
   const { column, value } = groupFilter(group);
   const { error } = await supabaseAdmin()
     .from("events")
@@ -83,7 +86,8 @@ export async function updateSubmission(fd: FormData) {
   const back = (msg: string) => redirect(`/admin/${group.key}?error=${encodeURIComponent(msg)}`);
 
   const errors: Record<string, string> = {};
-  const fields = parseEventFields(fd, errors);
+  const school = await getSchool(group.events[0].school_id);
+  const fields = parseEventFields(fd, errors, school ? allCampuses(school) : [group.events[0].campus]);
 
   const clubName = String(fd.get("club_name") ?? "").trim();
   if (group.submission && (clubName.length < 2 || clubName.length > 100))

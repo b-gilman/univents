@@ -18,6 +18,7 @@ export type PendingEvent = {
   info_url: string | null;
   price_cents: number | null;
   submission_id: string | null;
+  school_id: string;
 };
 
 export type Submission = {
@@ -91,12 +92,12 @@ export async function loadGroup(submissionId: string): Promise<PendingGroup | nu
 
 // The club's record in `organizations`: reuse one with the same name, or
 // create it (not verified) the first time a club is approved.
-export async function findOrCreateOrg(name: string): Promise<string> {
+export async function findOrCreateOrg(name: string, schoolId: string): Promise<string> {
   const existing = (await allOrgs()).find((o) => normalize(o.name) === normalize(name));
   if (existing) return existing.id;
   const { data, error } = await supabaseAdmin()
     .from("organizations")
-    .insert({ name: name.trim(), verified: false })
+    .insert({ name: name.trim(), verified: false, school_id: schoolId })
     .select("id")
     .single();
   if (error) throw error;

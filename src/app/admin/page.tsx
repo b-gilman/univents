@@ -6,6 +6,7 @@ import { Suspense } from "react";
 import { formatEventTime, formatPlace, formatPrice } from "@/lib/events";
 import { isAdmin } from "@/lib/server/admin-auth";
 import { loadPendingGroups, type PendingGroup } from "@/lib/server/admin-data";
+import { type School, getSchools } from "@/lib/schools";
 import AdminShell from "./AdminShell";
 import ConfirmButton from "./ConfirmButton";
 import { approveSubmission, logout, rejectSubmission } from "./actions";
@@ -37,6 +38,7 @@ async function PendingList() {
   if (!(await isAdmin())) redirect("/admin/login");
 
   let groups: PendingGroup[];
+  const schools = (await getSchools()) ?? [];
   try {
     groups = await loadPendingGroups();
   } catch (err) {
@@ -62,7 +64,7 @@ async function PendingList() {
         <ul className="flex flex-col gap-4">
           {groups.map((g) => (
             <li key={g.key}>
-              <PendingCard group={g} />
+              <PendingCard group={g} school={schools.find((s) => s.id === g.events[0].school_id)} />
             </li>
           ))}
         </ul>
@@ -71,7 +73,7 @@ async function PendingList() {
   );
 }
 
-function PendingCard({ group }: { group: PendingGroup }) {
+function PendingCard({ group, school }: { group: PendingGroup; school?: School }) {
   const e = group.events[0];
   const sub = group.submission;
   return (
@@ -82,6 +84,12 @@ function PendingCard({ group }: { group: PendingGroup }) {
       )}
       <div className="flex flex-col gap-3 p-4 text-sm">
         <div>
+          {school && (
+            <p className="mb-1 inline-block rounded-full px-2.5 py-0.5 text-xs font-semibold text-white"
+              style={{ backgroundColor: school.primary_color }}>
+              {school.short_name}
+            </p>
+          )}
           <h2 className="text-lg font-semibold">{e.title}</h2>
           {sub && (
             <p className="text-neutral-600">

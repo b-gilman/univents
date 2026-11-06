@@ -1,6 +1,7 @@
 import "server-only";
 import { createHash, createHmac, timingSafeEqual } from "node:crypto";
 import { cookies } from "next/headers";
+import { connection } from "next/server";
 
 // Admin login, kept simple: one password (ADMIN_PASSWORD on Vercel). After a
 // correct password we store a signed cookie, so you stay logged in for 30 days.
@@ -53,6 +54,7 @@ export async function endAdminSession() {
 }
 
 export async function isAdmin(): Promise<boolean> {
+  await connection(); // only check for real visitors (it reads the clock)
   if (!adminPasswordConfigured()) return false;
   const value = (await cookies()).get(COOKIE)?.value;
   if (!value) return false;

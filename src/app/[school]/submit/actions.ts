@@ -13,6 +13,7 @@ import {
   posterType,
   submitterHash,
 } from "@/lib/server/submissions";
+import { allCampuses, getSchool } from "@/lib/schools";
 import { LIMITS, type SubmitState } from "@/lib/submission-rules";
 
 const MAX_PER_HOUR = 5;
@@ -35,9 +36,14 @@ export async function submitEvent(
     return { status: "success", title: String(fd.get("title") ?? ""), dates: [] };
   }
 
+  const school = await getSchool(String(fd.get("school") ?? ""));
+  if (!school) {
+    return { status: "error", message: "Unknown school. Please reload the page.", errors: {}, values };
+  }
+
   const errors: Record<string, string> = {};
   const submitter = parseSubmitter(fd, errors);
-  const fields = parseEventFields(fd, errors);
+  const fields = parseEventFields(fd, errors, allCampuses(school));
   const dates = parseOccurrences(fd, errors, new Date());
 
   // Poster (optional): size and real image type.
@@ -94,7 +100,12 @@ export async function submitEvent(
     // Save who sent it (private), then the event date(s) as "pending".
     const { data: submission, error: subError } = await db
       .from("submissions")
-      .insert({ org_name: submitter.orgName, contact_email: submitter.email, submitter_hash: hash })
+      .insert({
+        org_name: submitter.orgName,
+        contact_email: submitter.email,
+        submitter_hash: hash,
+        school_id: school.id,
+      })
       .select("id")
       .single();
     if (subError) throw subError;
@@ -106,6 +117,7 @@ export async function submitEvent(
         image_url,
         status: "pending",
         submission_id: submission.id,
+        school_id: school.id,
       })),
     );
     if (eventsError) throw eventsError;

@@ -1,4 +1,5 @@
 import { cache } from "react";
+import { logLoadError } from "@/lib/log";
 import { supabase } from "@/lib/supabase";
 
 // The shape of one row from the `upcoming_events` view in Supabase
@@ -9,7 +10,7 @@ export type EventListItem = {
   description: string | null;
   starts_at: string;
   ends_at: string | null;
-  campus: "SGW" | "Loyola" | "Off-campus" | "Online";
+  campus: string;
   location: string | null;
   category: string;
   image_url: string | null;
@@ -17,6 +18,7 @@ export type EventListItem = {
   info_url: string | null;
   price_cents: number | null; // null = price not announced yet
   organization_name: string | null;
+  school_id: string;
 };
 
 type Result =
@@ -26,15 +28,16 @@ type Result =
 // Fetches upcoming published events, soonest first.
 // Never throws: if Supabase can't be reached we return ok: false so the page
 // can show a friendly message instead of crashing.
-export async function getUpcomingEvents(): Promise<Result> {
+export async function getUpcomingEvents(schoolId: string): Promise<Result> {
   const { data, error } = await supabase
     .from("upcoming_events")
     .select("*")
-    .limit(100);
+    .eq("school_id", schoolId)
+    .limit(200);
 
   if (error) {
     // Shows up in your terminal (locally) or in Vercel → Logs.
-    console.error("Failed to load events from Supabase:", error.message);
+    logLoadError("Failed to load events from Supabase:", error.message);
     return { ok: false, events: [] };
   }
 
@@ -128,14 +131,14 @@ export const getEventById = cache(
       .from("events")
       .select(
         "id, title, description, starts_at, ends_at, campus, location, category, " +
-          "image_url, signup_url, info_url, price_cents, " +
+          "image_url, signup_url, info_url, price_cents, school_id, " +
           "organization:organizations(name, website_url)",
       )
       .eq("id", id)
       .maybeSingle();
 
     if (error) {
-      console.error("Failed to load event from Supabase:", error.message);
+      logLoadError("Failed to load event from Supabase:", error.message);
       return { ok: false };
     }
     if (!data) return { ok: true, event: null };

@@ -5,7 +5,8 @@ import { Suspense, type ReactNode } from "react";
 import { TIME_ZONE, formatEventTime } from "@/lib/events";
 import { isAdmin } from "@/lib/server/admin-auth";
 import { loadGroup } from "@/lib/server/admin-data";
-import { CAMPUSES, CATEGORIES, LIMITS } from "@/lib/submission-rules";
+import { allCampuses, getSchool } from "@/lib/schools";
+import { CATEGORIES, LIMITS } from "@/lib/submission-rules";
 import AdminShell from "../AdminShell";
 import { updateSubmission } from "../actions";
 
@@ -38,6 +39,8 @@ async function EditForm({ params, searchParams }: PageProps<"/admin/[submissionI
   if (!group) notFound();
 
   const e = group.events[0];
+  const school = await getSchool(e.school_id);
+  const campuses = school ? allCampuses(school) : [e.campus];
   const single = group.events.length === 1;
   const priceType = e.price_cents === null ? "unknown" : e.price_cents === 0 ? "free" : "paid";
 
@@ -45,6 +48,7 @@ async function EditForm({ params, searchParams }: PageProps<"/admin/[submissionI
     <form action={updateSubmission} className="flex flex-col gap-4 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-black/5">
       <input type="hidden" name="submission_id" value={group.key} />
       <h1 className="text-xl font-bold">Edit before approving</h1>
+      {school && <p className="-mt-3 text-sm text-neutral-500">{school.name}</p>}
       {typeof error === "string" && (
         <p role="alert" className="rounded-xl bg-red-50 px-4 py-3 text-sm text-red-800">{error}</p>
       )}
@@ -68,7 +72,7 @@ async function EditForm({ params, searchParams }: PageProps<"/admin/[submissionI
         </Field>
         <Field label="Campus">
           <select name="campus" defaultValue={e.campus} className={input}>
-            {CAMPUSES.map((c) => <option key={c} value={c}>{c}</option>)}
+            {campuses.map((c) => <option key={c} value={c}>{c}</option>)}
           </select>
         </Field>
       </div>

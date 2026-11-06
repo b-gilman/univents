@@ -12,8 +12,6 @@ export const CATEGORIES = [
   "other",
 ] as const;
 
-export const CAMPUSES = ["SGW", "Loyola", "Off-campus", "Online"] as const;
-
 export const WEEKDAYS = [
   { value: 1, label: "Mon" },
   { value: 2, label: "Tue" },

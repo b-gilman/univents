@@ -1,7 +1,7 @@
 import "server-only";
 import { createHash } from "node:crypto";
 import { TIME_ZONE } from "@/lib/events";
-import { CAMPUSES, CATEGORIES, LIMITS } from "@/lib/submission-rules";
+import { CATEGORIES, LIMITS } from "@/lib/submission-rules";
 
 // Turns raw form data into clean, checked event details. Everything here
 // assumes the input could be anything: it comes from the public internet.
@@ -10,7 +10,7 @@ export type EventFields = {
   title: string;
   description: string | null;
   category: (typeof CATEGORIES)[number];
-  campus: (typeof CAMPUSES)[number];
+  campus: string;
   location: string | null;
   price_cents: number | null;
   signup_url: string | null;
@@ -41,7 +41,8 @@ function checkUrl(value: string, field: string, errors: Errors) {
 }
 
 // Fields shared by the public form and the admin edit form.
-export function parseEventFields(fd: FormData, errors: Errors): EventFields {
+// `campuses` = the school's campuses plus Off-campus/Online.
+export function parseEventFields(fd: FormData, errors: Errors, campuses: string[]): EventFields {
   const title = text(fd, "title");
   if (title.length < 3) errors.title = "Enter the event's name.";
   else if (title.length > LIMITS.title) errors.title = `Keep it under ${LIMITS.title} characters.`;
@@ -53,8 +54,8 @@ export function parseEventFields(fd: FormData, errors: Errors): EventFields {
   const category = text(fd, "category") as EventFields["category"];
   if (!CATEGORIES.includes(category)) errors.category = "Pick a category.";
 
-  const campus = text(fd, "campus") as EventFields["campus"];
-  if (!CAMPUSES.includes(campus)) errors.campus = "Pick a campus.";
+  const campus = text(fd, "campus");
+  if (!campuses.includes(campus)) errors.campus = "Pick a campus.";
 
   const location = text(fd, "location");
   if (location.length > LIMITS.location) errors.location = "That location is too long.";

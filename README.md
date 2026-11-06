@@ -40,9 +40,18 @@ Batches of real club events live in `supabase/events/` (one SQL file per
 batch, safe to run twice). Their posters are in `public/events/` and are
 referenced as `/events/<file>.webp`.
 
+## Schools
+
+Univents supports several schools. Each row in the `schools` table (Supabase)
+has a name, a colour and campuses; its pages live at `/<school-id>` (e.g.
+`/concordia`) in that colour. Visitors pick a school on `/` (remembered in a
+cookie for a year; "Change school" switches it). To add a school, run the
+`insert into public.schools …` example at the end of
+`supabase/migrations/20261108000000_schools.sql`.
+
 ## Event submissions and admin
 
-- **`/submit`**: public form where clubs send in events (with poster upload).
+- **`/<school>/submit`**: public form where clubs send in events (with poster upload).
   Submissions are saved as `pending` and are hidden from the site.
 - **`/admin`**: password-protected page to Approve / Edit / Reject them.
   Approving publishes the event (and creates the club in `organizations` if
