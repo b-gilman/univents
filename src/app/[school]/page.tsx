@@ -6,6 +6,8 @@ import { Suspense, type ReactNode } from "react";
 import AccountLink from "@/components/AccountLink";
 import EventCard from "@/components/EventCard";
 import FilterBar from "@/components/FilterBar";
+import InstallPrompt from "@/components/InstallPrompt";
+import SiteFooter from "@/components/SiteFooter";
 import ThemeColor from "@/components/ThemeColor";
 import {
   applyFilters,
@@ -100,6 +102,7 @@ async function SchoolHomeContent({
           />
         </div>
 
+        <InstallPrompt appName={SITE.name} />
         <h2 className="mt-2 mb-4 text-lg font-semibold">Upcoming events</h2>
 
         {/* The skeleton shows instantly; the list swaps in when Supabase answers. */}
@@ -116,6 +119,7 @@ async function SchoolHomeContent({
             Submit it to be listed here →
           </span>
         </Link>
+        <SiteFooter />
       </main>
     </div>
   );

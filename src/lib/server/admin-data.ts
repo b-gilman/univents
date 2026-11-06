@@ -35,12 +35,16 @@ export type PendingGroup = {
   matchedOrg: { id: string; name: string } | null; // existing club with the same name
 };
 
-export const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+export const UUID =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-const normalize = (name: string) => name.trim().toLowerCase().replace(/\s+/g, " ");
+const normalize = (name: string) =>
+  name.trim().toLowerCase().replace(/\s+/g, " ");
 
 async function allOrgs() {
-  const { data, error } = await supabaseAdmin().from("organizations").select("id, name");
+  const { data, error } = await supabaseAdmin()
+    .from("organizations")
+    .select("id, name");
   if (error) throw error;
   return data as { id: string; name: string }[];
 }
@@ -55,7 +59,9 @@ export async function loadPendingGroups(): Promise<PendingGroup[]> {
   if (error) throw error;
   const events = data as PendingEvent[];
 
-  const ids = [...new Set(events.map((e) => e.submission_id).filter(Boolean))] as string[];
+  const ids = [
+    ...new Set(events.map((e) => e.submission_id).filter(Boolean)),
+  ] as string[];
   const submissions = new Map<string, Submission>();
   if (ids.length > 0) {
     const { data: subs, error: subError } = await db
@@ -72,9 +78,13 @@ export async function loadPendingGroups(): Promise<PendingGroup[]> {
     const key = e.submission_id ?? e.id;
     let group = groups.get(key);
     if (!group) {
-      const submission = e.submission_id ? (submissions.get(e.submission_id) ?? null) : null;
+      const submission = e.submission_id
+        ? (submissions.get(e.submission_id) ?? null)
+        : null;
       const matchedOrg = submission
-        ? (orgs.find((o) => normalize(o.name) === normalize(submission.org_name)) ?? null)
+        ? (orgs.find(
+            (o) => normalize(o.name) === normalize(submission.org_name),
+          ) ?? null)
         : null;
       group = { key, submission, events: [], matchedOrg };
       groups.set(key, group);
@@ -84,7 +94,9 @@ export async function loadPendingGroups(): Promise<PendingGroup[]> {
   return [...groups.values()];
 }
 
-export async function loadGroup(submissionId: string): Promise<PendingGroup | null> {
+export async function loadGroup(
+  submissionId: string,
+): Promise<PendingGroup | null> {
   if (!UUID.test(submissionId)) return null;
   const groups = await loadPendingGroups();
   return groups.find((g) => g.key === submissionId) ?? null;
@@ -92,8 +104,13 @@ export async function loadGroup(submissionId: string): Promise<PendingGroup | nu
 
 // The club's record in `organizations`: reuse one with the same name, or
 // create it (not verified) the first time a club is approved.
-export async function findOrCreateOrg(name: string, schoolId: string): Promise<string> {
-  const existing = (await allOrgs()).find((o) => normalize(o.name) === normalize(name));
+export async function findOrCreateOrg(
+  name: string,
+  schoolId: string,
+): Promise<string> {
+  const existing = (await allOrgs()).find(
+    (o) => normalize(o.name) === normalize(name),
+  );
   if (existing) return existing.id;
   const { data, error } = await supabaseAdmin()
     .from("organizations")
@@ -110,4 +127,18 @@ export function groupFilter(group: PendingGroup) {
   return group.submission
     ? { column: "submission_id", value: group.submission.id }
     : { column: "id", value: group.events[0].id };
+}
+
+// An event counts as over once it ends (or 4 hours after it starts if it has
+// no end time); same rule as the public site.
+export function isOver(e: { starts_at: string; ends_at: string | null }) {
+  const end = e.ends_at
+    ? Date.parse(e.ends_at)
+    : Date.parse(e.starts_at) + 4 * 3600e3;
+  return end < Date.now();
+}
+
+// Events starting after this moment count as "upcoming" in the admin list.
+export function upcomingCutoffIso() {
+  return new Date(Date.now() - 4 * 3600e3).toISOString();
 }

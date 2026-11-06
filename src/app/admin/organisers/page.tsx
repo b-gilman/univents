@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
 import { getSchools } from "@/lib/schools";
 import { isAdmin } from "@/lib/server/admin-auth";
 import { supabaseAdmin } from "@/lib/server/supabase-admin";
 import AdminShell from "../AdminShell";
+import AdminTabs from "../AdminTabs";
 import ConfirmButton from "../ConfirmButton";
 import { addOrganiser, removeOrganiser, setVerified } from "../actions";
 
@@ -17,12 +17,7 @@ export const metadata: Metadata = {
 export default function OrganisersPage(props: PageProps<"/admin/organisers">) {
   return (
     <AdminShell>
-      <Link
-        href="/admin"
-        className="mb-3 inline-flex min-h-11 items-center font-semibold text-brand"
-      >
-        ← Back to review
-      </Link>
+      <AdminTabs current="clubs" />
       <Suspense fallback={<p className="text-neutral-500">Loading…</p>}>
         <Content {...props} />
       </Suspense>

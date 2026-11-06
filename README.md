@@ -89,6 +89,20 @@ Needs two server-only environment variables (in `.env.local` and on Vercel,
 Contact emails live in the private `submissions` table, which the public key
 can't read.
 
+## Admin tabs
+
+`/admin` has three tabs: **Review** (pending submissions; expired ones can be
+cleared), **Live events** (edit, hide/show or delete any published event,
+upcoming or past) and **Clubs** (organisers and verification).
+
+## Installable app and privacy
+
+- `src/app/manifest.ts` + icons in `src/app/` and `public/icons/` make the
+  site installable ("Add to Home Screen"); school pages show a dismissible
+  install tip (`src/components/InstallPrompt.tsx`).
+- `/privacy` explains what's collected and who sees it. Set
+  `privacyEmail` in `src/lib/site.ts` to an address you check.
+
 ## Useful commands
 
 | Command         | What it does                            |

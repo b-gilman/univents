@@ -42,10 +42,15 @@ function checkUrl(value: string, field: string, errors: Errors) {
 
 // Fields shared by the public form and the admin edit form.
 // `campuses` = the school's campuses plus Off-campus/Online.
-export function parseEventFields(fd: FormData, errors: Errors, campuses: string[]): EventFields {
+export function parseEventFields(
+  fd: FormData,
+  errors: Errors,
+  campuses: string[],
+): EventFields {
   const title = text(fd, "title");
   if (title.length < 3) errors.title = "Enter the event's name.";
-  else if (title.length > LIMITS.title) errors.title = `Keep it under ${LIMITS.title} characters.`;
+  else if (title.length > LIMITS.title)
+    errors.title = `Keep it under ${LIMITS.title} characters.`;
 
   const description = text(fd, "description");
   if (description.length > LIMITS.description)
@@ -58,7 +63,8 @@ export function parseEventFields(fd: FormData, errors: Errors, campuses: string[
   if (!campuses.includes(campus)) errors.campus = "Pick a campus.";
 
   const location = text(fd, "location");
-  if (location.length > LIMITS.location) errors.location = "That location is too long.";
+  if (location.length > LIMITS.location)
+    errors.location = "That location is too long.";
 
   // Price: "free", "paid" (+ amount) or "unknown" → 0, cents, or null (TBA)
   let price_cents: number | null = null;
@@ -66,10 +72,15 @@ export function parseEventFields(fd: FormData, errors: Errors, campuses: string[
   if (priceType === "free") price_cents = 0;
   else if (priceType === "paid") {
     const amount = Number(text(fd, "price").replace(/[$,\s]/g, ""));
-    if (!Number.isFinite(amount) || amount <= 0 || amount > LIMITS.maxPriceDollars)
+    if (
+      !Number.isFinite(amount) ||
+      amount <= 0 ||
+      amount > LIMITS.maxPriceDollars
+    )
       errors.price = `Enter a price between $0.01 and $${LIMITS.maxPriceDollars}.`;
     else price_cents = Math.round(amount * 100);
-  } else if (priceType !== "unknown") errors.price_type = "Choose a price option.";
+  } else if (priceType !== "unknown")
+    errors.price_type = "Choose a price option.";
 
   return {
     title,
@@ -109,7 +120,13 @@ function wallClockMs(ms: number) {
 }
 
 // Montreal wall-clock time → Date (handles daylight saving time).
-export function montrealTime(y: number, m: number, d: number, h: number, min: number) {
+export function montrealTime(
+  y: number,
+  m: number,
+  d: number,
+  h: number,
+  min: number,
+) {
   const guess = Date.UTC(y, m - 1, d, h, min);
   let result = guess - (wallClockMs(guess) - guess);
   result = guess - (wallClockMs(result) - result); // second pass near DST changes
@@ -138,13 +155,23 @@ const dayNumber = (day: Day) => Date.UTC(day.y, day.m - 1, day.d) / 864e5;
 
 function dayFromNumber(n: number): Day {
   const dt = new Date(n * 864e5);
-  return { y: dt.getUTCFullYear(), m: dt.getUTCMonth() + 1, d: dt.getUTCDate() };
+  return {
+    y: dt.getUTCFullYear(),
+    m: dt.getUTCMonth() + 1,
+    d: dt.getUTCDate(),
+  };
 }
 
 export type Occurrence = { starts_at: string; ends_at: string | null };
 
 // Works out every date of the event (one, or several if it repeats weekly).
-export function parseOccurrences(fd: FormData, errors: Errors, now: Date): Occurrence[] {
+// `allowPast`: the admin may correct events that already happened.
+export function parseOccurrences(
+  fd: FormData,
+  errors: Errors,
+  now: Date,
+  { allowPast = false }: { allowPast?: boolean } = {},
+): Occurrence[] {
   const first = parseDay(text(fd, "date"));
   const start = TIME.exec(text(fd, "start_time"));
   const endRaw = text(fd, "end_time");
@@ -156,7 +183,8 @@ export function parseOccurrences(fd: FormData, errors: Errors, now: Date): Occur
   if (!first || !start || (endRaw && !end)) return [];
 
   const today = parseDay(ymdFormat.format(now))!;
-  if (dayNumber(first) < dayNumber(today)) errors.date = "That date has already passed.";
+  if (!allowPast && dayNumber(first) < dayNumber(today))
+    errors.date = "That date has already passed.";
   if (dayNumber(first) > dayNumber(today) + LIMITS.maxDaysAhead)
     errors.date = "That's more than a year away.";
 
@@ -168,7 +196,8 @@ export function parseOccurrences(fd: FormData, errors: Errors, now: Date): Occur
       return [];
     }
     const span = dayNumber(until) - dayNumber(first);
-    if (span < 0) errors.repeat_until = "The last date must be after the first date.";
+    if (span < 0)
+      errors.repeat_until = "The last date must be after the first date.";
     else if (span > LIMITS.maxRepeatDays)
       errors.repeat_until = `Repeating events can run up to ${LIMITS.maxRepeatDays} days.`;
 
@@ -177,15 +206,19 @@ export function parseOccurrences(fd: FormData, errors: Errors, now: Date): Occur
       .map((v) => Number(v))
       .filter((n) => Number.isInteger(n) && n >= 0 && n <= 6);
     // No day ticked? Use the first date's weekday.
-    if (weekdays.length === 0) weekdays = [new Date(dayNumber(first) * 864e5).getUTCDay()];
+    if (weekdays.length === 0)
+      weekdays = [new Date(dayNumber(first) * 864e5).getUTCDay()];
 
     if (span >= 0 && span <= LIMITS.maxRepeatDays) {
       days = [];
       for (let n = dayNumber(first); n <= dayNumber(until); n++) {
-        if (weekdays.includes(new Date(n * 864e5).getUTCDay())) days.push(dayFromNumber(n));
+        if (weekdays.includes(new Date(n * 864e5).getUTCDay()))
+          days.push(dayFromNumber(n));
       }
-      if (days.length === 0) errors.weekdays = "None of those days fall in that date range.";
-      if (days.length > LIMITS.maxDates) errors.repeat_until = "That's too many dates.";
+      if (days.length === 0)
+        errors.weekdays = "None of those days fall in that date range.";
+      if (days.length > LIMITS.maxDates)
+        errors.repeat_until = "That's too many dates.";
     }
   }
 
@@ -202,7 +235,10 @@ export function parseOccurrences(fd: FormData, errors: Errors, now: Date): Occur
         endsAt = montrealTime(next.y, next.m, next.d, eh, em);
       }
     }
-    return { starts_at: startsAt.toISOString(), ends_at: endsAt?.toISOString() ?? null };
+    return {
+      starts_at: startsAt.toISOString(),
+      ends_at: endsAt?.toISOString() ?? null,
+    };
   });
 }
 
@@ -212,8 +248,10 @@ export function parseOccurrences(fd: FormData, errors: Errors, now: Date): Occur
 
 export function parseSubmitter(fd: FormData, errors: Errors) {
   const orgName = text(fd, "club_name");
-  if (orgName.length < 2) errors.club_name = "Enter your club or organization's name.";
-  else if (orgName.length > LIMITS.clubName) errors.club_name = "That name is too long.";
+  if (orgName.length < 2)
+    errors.club_name = "Enter your club or organization's name.";
+  else if (orgName.length > LIMITS.clubName)
+    errors.club_name = "That name is too long.";
 
   const email = text(fd, "contact_email").toLowerCase();
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || email.length > LIMITS.email)
@@ -236,9 +274,12 @@ export function submitterHash(ip: string) {
 
 // Checks the poster really is a JPEG/PNG/WebP image by its first bytes,
 // not just by its name.
-export function posterType(bytes: Uint8Array): { ext: string; mime: string } | null {
+export function posterType(
+  bytes: Uint8Array,
+): { ext: string; mime: string } | null {
   const b = bytes;
-  if (b[0] === 0xff && b[1] === 0xd8 && b[2] === 0xff) return { ext: "jpg", mime: "image/jpeg" };
+  if (b[0] === 0xff && b[1] === 0xd8 && b[2] === 0xff)
+    return { ext: "jpg", mime: "image/jpeg" };
   if (b[0] === 0x89 && b[1] === 0x50 && b[2] === 0x4e && b[3] === 0x47)
     return { ext: "png", mime: "image/png" };
   if (

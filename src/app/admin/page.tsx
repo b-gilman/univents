@@ -5,11 +5,21 @@ import { redirect } from "next/navigation";
 import { Suspense } from "react";
 import { formatEventTime, formatPlace, formatPrice } from "@/lib/events";
 import { isAdmin } from "@/lib/server/admin-auth";
-import { loadPendingGroups, type PendingGroup } from "@/lib/server/admin-data";
+import {
+  isOver,
+  loadPendingGroups,
+  type PendingGroup,
+} from "@/lib/server/admin-data";
 import { type School, getSchools } from "@/lib/schools";
 import AdminShell from "./AdminShell";
+import AdminTabs from "./AdminTabs";
 import ConfirmButton from "./ConfirmButton";
-import { approveSubmission, logout, rejectSubmission } from "./actions";
+import {
+  approveSubmission,
+  clearExpiredSubmissions,
+  logout,
+  rejectSubmission,
+} from "./actions";
 
 export const metadata: Metadata = {
   title: "Review events · Admin",
@@ -38,9 +48,13 @@ async function PendingList() {
   if (!(await isAdmin())) redirect("/admin/login");
 
   let groups: PendingGroup[];
+  let expiredCount = 0;
   const schools = (await getSchools()) ?? [];
   try {
     groups = await loadPendingGroups();
+    // Submissions whose dates have all passed are hidden (see "Clear" below).
+    expiredCount = groups.filter((g) => g.events.every(isOver)).length;
+    groups = groups.filter((g) => !g.events.every(isOver));
   } catch (err) {
     console.error("Admin: failed to load pending events", err);
     return (
@@ -53,19 +67,23 @@ async function PendingList() {
 
   return (
     <>
-      <Link
-        href="/admin/organisers"
-        className="mb-4 flex min-h-11 items-center justify-between rounded-xl bg-white px-4 font-semibold shadow-sm ring-1 ring-black/5 active:bg-neutral-50"
-      >
-        Clubs and organisers{" "}
-        <span aria-hidden="true" className="text-neutral-400">
-          ›
-        </span>
-      </Link>
+      <AdminTabs current="review" />
       <h1 className="mb-4 text-xl font-bold">
         Waiting for review{" "}
         <span className="text-neutral-500">({groups.length})</span>
       </h1>
+      {expiredCount > 0 && (
+        <form action={clearExpiredSubmissions} className="mb-4">
+          <button
+            type="submit"
+            className="flex min-h-11 w-full items-center justify-center rounded-xl bg-white px-4 text-sm font-semibold text-neutral-700 ring-1 ring-black/10 active:bg-neutral-50"
+          >
+            Clear {expiredCount} expired{" "}
+            {expiredCount === 1 ? "submission" : "submissions"} (dates already
+            passed)
+          </button>
+        </form>
+      )}
       {groups.length === 0 ? (
         <p className="rounded-2xl bg-white p-6 text-center text-neutral-600 shadow-sm ring-1 ring-black/5">
           Nothing to review right now 🎉

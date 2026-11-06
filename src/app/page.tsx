@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { Suspense } from "react";
 import { SCHOOL_COOKIE, getSchools, schoolTheme } from "@/lib/schools";
 import { SITE } from "@/lib/site";
+import SiteFooter from "@/components/SiteFooter";
 import { chooseSchool } from "./school-actions";
 
 // The front door. Returning visitors go straight to their school's page;
@@ -25,6 +26,7 @@ export default function Home(props: PageProps<"/">) {
         >
           <SchoolPicker {...props} />
         </Suspense>
+        <SiteFooter />
       </main>
     </div>
   );

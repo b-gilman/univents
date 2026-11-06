@@ -130,6 +130,14 @@ export function SignupForm({
       <button type="submit" disabled={pending} className={button}>
         {pending ? "Creating your account…" : "Create account"}
       </button>
+      <p className="-mt-2 text-center text-xs text-neutral-500">
+        By creating an account you agree to how we handle your information in
+        our{" "}
+        <Link href="/privacy" className="underline">
+          privacy policy
+        </Link>
+        . The club hosting an event you RSVP to can see your name.
+      </p>
       <p className="text-center text-sm text-neutral-600">
         Already have an account?{" "}
         <Link

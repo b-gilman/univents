@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
+import SiteFooter from "@/components/SiteFooter";
 import ThemeColor from "@/components/ThemeColor";
 import { type School, schoolTheme } from "@/lib/schools";
 
@@ -35,6 +36,7 @@ export default function EventPageShell({
       </header>
       <main className="mx-auto w-full max-w-xl flex-1 px-4 pt-4 pb-[max(env(safe-area-inset-bottom),2rem)]">
         {children}
+        <SiteFooter />
       </main>
     </div>
   );

@@ -14,7 +14,10 @@ export default function AdminShell({
     <div className="flex min-h-dvh flex-1 flex-col bg-neutral-100 text-neutral-900">
       <header className="bg-neutral-900 px-4 pt-[max(env(safe-area-inset-top),0.75rem)] pb-3 text-white">
         <div className="mx-auto flex max-w-xl items-center justify-between gap-3">
-          <Link href="/admin" className="flex min-h-11 items-center font-semibold">
+          <Link
+            href="/admin"
+            className="flex min-h-11 items-center font-semibold"
+          >
             Admin · {SITE.name}
           </Link>
           {right}

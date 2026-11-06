@@ -9,4 +9,8 @@ export const SITE = {
   tagline: "Every club meetup, talk and party on campus — in one place.",
   description: "Discover student club events, talks and parties on campus.",
   brandColor: "#4338ca",
+  // Shown on /privacy for privacy requests (access, correction, deletion).
+  // Fill in an email you check, e.g. "privacy@yourdomain.com".
+  privacyEmail: "",
+  privacyUpdated: "November 2026",
 } as const;

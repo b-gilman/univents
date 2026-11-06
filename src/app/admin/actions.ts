@@ -207,3 +207,104 @@ export async function setVerified(fd: FormData) {
   if (error) throw error;
   revalidatePath(ORG_PAGE);
 }
+
+// ------------------------------------------------------------ live events
+
+const EVENTS_PAGE = "/admin/events";
+
+function eventIdFrom(fd: FormData) {
+  const id = String(fd.get("event_id") ?? "");
+  if (!UUID_RE.test(id)) throw new Error("Unknown event.");
+  return id;
+}
+
+// Edit any event (including past ones, e.g. to fix a typo).
+export async function adminUpdateEvent(fd: FormData) {
+  await assertAdmin();
+  const id = eventIdFrom(fd);
+  const page = `${EVENTS_PAGE}/${id}`;
+  const db = supabaseAdmin();
+  const { data: event, error: loadError } = await db
+    .from("events")
+    .select("school_id, campus")
+    .eq("id", id)
+    .maybeSingle();
+  if (loadError) throw loadError;
+  if (!event) redirect(EVENTS_PAGE);
+
+  const school = await getSchool(event.school_id);
+  const errors: Record<string, string> = {};
+  const fields = parseEventFields(
+    fd,
+    errors,
+    school ? allCampuses(school) : [event.campus],
+  );
+  const [date] = parseOccurrences(fd, errors, new Date(), { allowPast: true });
+  if (Object.keys(errors).length > 0) {
+    redirect(
+      `${page}?error=${encodeURIComponent(Object.values(errors).join(" "))}`,
+    );
+  }
+  const changes: Record<string, unknown> = { ...fields, ...date };
+  if (fd.get("remove_poster") === "yes") changes.image_url = null;
+
+  const { error } = await db.from("events").update(changes).eq("id", id);
+  if (error) throw error;
+  revalidatePath(EVENTS_PAGE);
+  redirect(`${page}?saved=1`);
+}
+
+// Hide an event from the site without deleting it (status "draft"), or show
+// it again ("published").
+export async function adminSetEventStatus(fd: FormData) {
+  await assertAdmin();
+  const id = eventIdFrom(fd);
+  const status = fd.get("status") === "published" ? "published" : "draft";
+  const { error } = await supabaseAdmin()
+    .from("events")
+    .update({ status })
+    .eq("id", id);
+  if (error) throw error;
+  revalidatePath(EVENTS_PAGE);
+}
+
+export async function adminDeleteEvent(fd: FormData) {
+  await assertAdmin();
+  const id = eventIdFrom(fd);
+  const { error } = await supabaseAdmin().from("events").delete().eq("id", id);
+  if (error) throw error;
+  revalidatePath(EVENTS_PAGE);
+  redirect(`${EVENTS_PAGE}?deleted=1`);
+}
+
+// Submissions whose dates have all passed can't be published usefully:
+// mark them "rejected" so they leave the review queue.
+export async function clearExpiredSubmissions() {
+  await assertAdmin();
+  const db = supabaseAdmin();
+  const { data, error } = await db
+    .from("events")
+    .select("id, starts_at, ends_at")
+    .eq("status", "pending");
+  if (error) throw error;
+  const now = Date.now();
+  const expired = (
+    data as { id: string; starts_at: string; ends_at: string | null }[]
+  )
+    .filter(
+      (e) =>
+        (e.ends_at
+          ? Date.parse(e.ends_at)
+          : Date.parse(e.starts_at) + 4 * 3600e3) < now,
+    )
+    .map((e) => e.id);
+  if (expired.length > 0) {
+    const { error: updateError } = await db
+      .from("events")
+      .update({ status: "rejected" })
+      .in("id", expired)
+      .eq("status", "pending");
+    if (updateError) throw updateError;
+  }
+  revalidatePath("/admin");
+}
