@@ -1,7 +1,7 @@
 import type { MetadataRoute } from "next";
 import { SITE } from "@/lib/site";
 
-// Makes Univents installable ("Add to Home Screen"): it opens full-screen
+// Makes Kuku installable ("Add to Home Screen"): it opens full-screen
 // like an app, with its own icon, starting on the student's school page.
 export default function manifest(): MetadataRoute.Manifest {
   return {

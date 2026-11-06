@@ -1,4 +1,4 @@
-# Univents
+# Kuku
 
 A mobile-first site for student club events, built with
 [Next.js](https://nextjs.org) (App Router), TypeScript, Tailwind CSS and Supabase.
@@ -42,7 +42,7 @@ referenced as `/events/<file>.webp`.
 
 ## Schools
 
-Univents supports several schools. Each row in the `schools` table (Supabase)
+Kuku supports several schools. Each row in the `schools` table (Supabase)
 has a name, a colour and campuses; its pages live at `/<school-id>` (e.g.
 `/concordia`) in that colour. Visitors pick a school on `/` (remembered in a
 cookie for a year; "Change school" switches it). To add a school, run the

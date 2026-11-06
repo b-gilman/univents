@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 :root {
-  /* Univents' own colour. Each school's pages replace it with the school's
+  /* Kuku's own colour. Each school's pages replace it with the school's
      colour (see schoolTheme in src/lib/schools.ts). Keep in sync with
      brandColor in src/lib/site.ts. */
   --brand: #4338ca;

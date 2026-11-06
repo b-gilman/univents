@@ -11,6 +11,7 @@ import {
   type ReactNode,
 } from "react";
 import { submitEvent } from "./actions";
+import { SITE } from "@/lib/site";
 import {
   CATEGORIES,
   LIMITS,
@@ -97,7 +98,7 @@ export default function SubmitForm({
           Posting as <strong>{organisation.name}</strong>.{" "}
           {organisation.verified
             ? "Your club is verified, so the event goes live right away."
-            : "It'll go live after a quick review by the Univents admin."}
+            : `It'll go live after a quick review by the ${SITE.name} admin.`}
         </p>
       )}
 

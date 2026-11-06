@@ -1,6 +1,6 @@
 "use client";
 
-// A small, dismissible tip on school pages: "Add Univents to your home screen".
+// A small, dismissible tip on school pages: "Add Kuku to your home screen".
 // - Android (Chrome etc.): shows an "Install" button that opens the real prompt.
 // - iPhone/iPad Safari: shows how to do it (Share → Add to Home Screen), since
 //   Apple doesn't allow an install button.
