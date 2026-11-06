@@ -5,7 +5,13 @@
 
 import Link from "next/link";
 import { useActionState, type ReactNode } from "react";
-import { type AuthState, logIn, signUp } from "@/app/account/actions";
+import {
+  type AuthState,
+  logIn,
+  requestPasswordReset,
+  signUp,
+  updatePassword,
+} from "@/app/account/actions";
 
 const input =
   "block min-h-11 w-full rounded-xl border-0 bg-white px-3 py-2 text-base ring-1 ring-black/15 focus:outline-none focus:ring-2 focus:ring-brand";
@@ -180,6 +186,12 @@ export function LoginForm({ next }: { next: string | null }) {
           className={input}
         />
       </Field>
+      <Link
+        href={withNext("/forgot-password", next)}
+        className="-mt-2 self-end text-sm font-medium text-brand"
+      >
+        Forgot your password?
+      </Link>
       <button type="submit" disabled={pending} className={button}>
         {pending ? "Logging in…" : "Log in"}
       </button>
@@ -192,6 +204,53 @@ export function LoginForm({ next }: { next: string | null }) {
           Create an account
         </Link>
       </p>
+    </form>
+  );
+}
+
+export function ForgotPasswordForm() {
+  const [state, action, pending] = useActionState<AuthState, FormData>(requestPasswordReset, {});
+  if (state.notice) {
+    return (
+      <p className="rounded-xl bg-emerald-50 px-4 py-3 font-medium text-emerald-800">
+        {state.notice}
+      </p>
+    );
+  }
+  return (
+    <form action={action} className="flex flex-col gap-4">
+      {state.error && <Alert>{state.error}</Alert>}
+      <Field label="Email">
+        <input name="email" type="email" required autoComplete="email" inputMode="email"
+          defaultValue={state.values?.email} className={input} />
+      </Field>
+      <button type="submit" disabled={pending} className={button}>
+        {pending ? "Sending…" : "Email me a reset link"}
+      </button>
+      <p className="text-center text-sm text-neutral-600">
+        Remembered it? <Link href="/login" className="font-semibold text-brand">Log in</Link>
+      </p>
+    </form>
+  );
+}
+
+export function ResetPasswordForm() {
+  const [state, action, pending] = useActionState<AuthState, FormData>(updatePassword, {});
+  const e = state.errors ?? {};
+  return (
+    <form action={action} className="flex flex-col gap-4">
+      {state.error && <Alert>{state.error}</Alert>}
+      <Field label="New password" error={e.password} hint="At least 8 characters.">
+        <input name="password" type="password" required minLength={8} maxLength={72}
+          autoComplete="new-password" className={input} />
+      </Field>
+      <Field label="Type it again" error={e.confirm}>
+        <input name="confirm" type="password" required minLength={8} maxLength={72}
+          autoComplete="new-password" className={input} />
+      </Field>
+      <button type="submit" disabled={pending} className={button}>
+        {pending ? "Saving…" : "Save new password"}
+      </button>
     </form>
   );
 }

@@ -1,3 +1,4 @@
+import Link from "next/link";
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
@@ -23,7 +24,8 @@ export default function LoginPage(props: PageProps<"/login">) {
 }
 
 async function LoginContent({ searchParams }: PageProps<"/login">) {
-  const next = safeNext((await searchParams).next as string | undefined);
+  const query = await searchParams;
+  const next = safeNext(query.next as string | undefined);
   if (await getCurrentUser()) redirect(next ?? "/account");
   const school = await schoolForVisitor(next);
   return (
@@ -33,6 +35,18 @@ async function LoginContent({ searchParams }: PageProps<"/login">) {
         <p className="mt-1 mb-5 text-neutral-600">
           RSVP to events and keep track of what you&apos;re going to.
         </p>
+        {query.error === "link" && (
+          <p
+            role="alert"
+            className="mb-4 rounded-xl bg-amber-50 px-4 py-3 text-sm text-amber-900"
+          >
+            That email link has expired or was already used. Log in, or{" "}
+            <Link href="/forgot-password" className="font-semibold underline">
+              get a new link
+            </Link>
+            .
+          </p>
+        )}
         <LoginForm next={next} />
       </div>
     </EventPageShell>

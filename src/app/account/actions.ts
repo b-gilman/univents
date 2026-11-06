@@ -1,11 +1,13 @@
 "use server";
 
-// Sign up, log in, log out and RSVP. These run on the server.
+// Sign up, log in, log out, RSVP, password reset and reminder settings.
+// These run on the server.
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { getCurrentUser, safeNext, supabaseForUser } from "@/lib/server/auth";
 import { getSchool } from "@/lib/schools";
+import { siteUrl } from "@/lib/server/email";
 
 export type AuthState = {
   error?: string;
@@ -50,7 +52,10 @@ export async function signUp(
   const { data, error } = await supabase.auth.signUp({
     email,
     password,
-    options: { data: { full_name: fullName, school_id: school!.id } },
+    options: {
+      data: { full_name: fullName, school_id: school!.id },
+      emailRedirectTo: `${siteUrl()}/auth/confirm?next=/${school!.id}`,
+    },
   });
 
   if (error) {
@@ -158,5 +163,92 @@ export async function toggleRsvp(fd: FormData) {
   }
 
   revalidatePath(`/events/${eventId}`);
+  revalidatePath("/account");
+}
+
+// --------------------------------------------------------- forgot password
+
+// Emails a "reset your password" link. Always says the same thing, so nobody
+// can use this form to find out which emails have accounts.
+export async function requestPasswordReset(
+  _prev: AuthState,
+  fd: FormData,
+): Promise<AuthState> {
+  const email = text(fd, "email").toLowerCase();
+  if (!EMAIL.test(email))
+    return { error: "Enter a valid email address.", values: { email } };
+
+  const supabase = await supabaseForUser();
+  const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: `${siteUrl()}/auth/confirm?next=/reset-password`,
+  });
+  if (error && error.status === 429) {
+    return {
+      error: "Too many requests. Please wait a few minutes and try again.",
+      values: { email },
+    };
+  }
+  if (error) console.error("Password reset email failed:", error.message);
+
+  return {
+    notice: `If there's an account for ${email}, we've emailed it a link to choose a new password. Check your inbox (and spam folder).`,
+  };
+}
+
+// Sets a new password. Only works while logged in, which the emailed reset
+// link does for you.
+export async function updatePassword(
+  _prev: AuthState,
+  fd: FormData,
+): Promise<AuthState> {
+  const password =
+    typeof fd.get("password") === "string"
+      ? (fd.get("password") as string)
+      : "";
+  const confirm =
+    typeof fd.get("confirm") === "string" ? (fd.get("confirm") as string) : "";
+  const errors: Record<string, string> = {};
+  if (password.length < 8) errors.password = "Use at least 8 characters.";
+  else if (password.length > 72) errors.password = "Use at most 72 characters.";
+  else if (password !== confirm)
+    errors.confirm = "The two passwords don't match.";
+  if (Object.keys(errors).length > 0) return { errors };
+
+  if (!(await getCurrentUser())) {
+    return {
+      error:
+        "This reset link has expired. Request a new one from the log in page.",
+    };
+  }
+  const supabase = await supabaseForUser();
+  const { error } = await supabase.auth.updateUser({ password });
+  if (error) {
+    if (error.code === "same_password")
+      return {
+        errors: { password: "Choose a password different from your old one." },
+      };
+    if (error.code === "weak_password")
+      return { errors: { password: "Choose a stronger password." } };
+    console.error("Password update failed:", error.message);
+    return { error: "Couldn't change your password. Please try again." };
+  }
+  redirect("/account?password=updated");
+}
+
+// ---------------------------------------------------------- reminder emails
+
+export async function setEmailReminders(fd: FormData) {
+  const user = await getCurrentUser();
+  if (!user) redirect("/login?next=/account");
+  const on = fd.get("on") === "yes";
+  const supabase = await supabaseForUser();
+  const { error } = await supabase
+    .from("profiles")
+    .update({ email_reminders: on })
+    .eq("id", user.id);
+  if (error) {
+    console.error("Updating reminder setting failed:", error.message);
+    throw new Error("Couldn't save your reminder setting. Please try again.");
+  }
   revalidatePath("/account");
 }

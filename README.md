@@ -59,9 +59,12 @@ everyone sees the count, only the student sees their own RSVPs (`/account`,
 query for the admin to list who is going to an event). `src/proxy.ts` renews
 logins before they expire.
 
-Supabase setting: **Authentication → Sign In / Providers → Email →
-"Confirm email" off**, until a custom email sender (e.g. Resend) is set up;
-Supabase's built-in email only reaches your own team.
+Email (via Resend on `kukucanada.dev`): forgot password (`/forgot-password`),
+email confirmation, and daily reminders for tomorrow's RSVP'd events
+(`/api/cron/reminders`, scheduled in `vercel.json`, needs `RESEND_API_KEY`,
+`EMAIL_FROM`, `CRON_SECRET`). Supabase sends auth emails through Resend SMTP
+using the templates in `supabase/email-templates/`. Students can turn
+reminders off on "My events".
 
 ## Organiser accounts
 

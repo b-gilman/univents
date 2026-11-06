@@ -13,14 +13,14 @@ import { getSchool } from "@/lib/schools";
 import { getCurrentUser, supabaseForUser } from "@/lib/server/auth";
 import { myOrganisations } from "@/lib/server/organisers";
 import { SITE } from "@/lib/site";
-import { logOut } from "./actions";
+import { logOut, setEmailReminders } from "./actions";
 
 export const metadata: Metadata = {
   title: `My events · ${SITE.name}`,
   robots: { index: false },
 };
 
-export default function AccountPage() {
+export default function AccountPage(props: PageProps<"/account">) {
   return (
     <Suspense
       fallback={
@@ -29,7 +29,7 @@ export default function AccountPage() {
         </EventPageShell>
       }
     >
-      <AccountContent />
+      <AccountContent {...props} />
     </Suspense>
   );
 }
@@ -43,7 +43,8 @@ type MyEvent = {
   location: string | null;
 };
 
-async function AccountContent() {
+async function AccountContent({ searchParams }: PageProps<"/account">) {
+  const query = await searchParams;
   const user = await getCurrentUser();
   if (!user) redirect("/login?next=/account");
   const school = user.schoolId ? await getSchool(user.schoolId) : null;
@@ -51,6 +52,12 @@ async function AccountContent() {
 
   // My RSVPs, then the events they're for (soonest first).
   const supabase = await supabaseForUser();
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("email_reminders")
+    .eq("id", user.id)
+    .maybeSingle();
+  const reminders = profile?.email_reminders ?? true;
   const { data: rsvps } = await supabase
     .from("rsvps")
     .select("event_id")
@@ -72,6 +79,11 @@ async function AccountContent() {
   return (
     <EventPageShell school={school}>
       <div className="flex flex-col gap-5">
+        {query.password === "updated" && (
+          <p className="rounded-xl bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-800">
+            Your password has been changed.
+          </p>
+        )}
         <div>
           <h1 className="text-2xl font-bold">My events</h1>
           <p className="text-neutral-600">
@@ -120,6 +132,38 @@ async function AccountContent() {
             </span>
           </Link>
         )}
+
+        <form
+          action={setEmailReminders}
+          className="flex items-center justify-between gap-3 rounded-2xl bg-white p-4 text-sm shadow-sm ring-1 ring-black/5"
+        >
+          <input type="hidden" name="on" value={reminders ? "no" : "yes"} />
+          <span>
+            <span className="block font-semibold">Reminder emails</span>
+            <span className="block text-neutral-600">
+              {reminders
+                ? "We'll email you the day before events you're going to."
+                : "Off. You won't get reminder emails."}
+            </span>
+          </span>
+          <button
+            type="submit"
+            role="switch"
+            aria-checked={reminders}
+            aria-label="Reminder emails"
+            className={
+              "relative h-8 w-14 shrink-0 rounded-full transition-colors " +
+              (reminders ? "bg-brand" : "bg-neutral-300")
+            }
+          >
+            <span
+              className={
+                "absolute top-1 h-6 w-6 rounded-full bg-white shadow transition-all " +
+                (reminders ? "left-7" : "left-1")
+              }
+            />
+          </button>
+        </form>
 
         <div className="rounded-2xl bg-white p-4 text-sm shadow-sm ring-1 ring-black/5">
           <p className="text-neutral-600">Logged in as {user.email}</p>

@@ -1,0 +1,12 @@
+<!-- Supabase → Authentication → Emails → Templates → "Confirm signup"
+     Subject: Confirm your Kuku account -->
+<div style="max-width:520px;margin:0 auto;padding:24px 16px;font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;color:#171717">
+  <div style="background:#4338ca;color:#fff;border-radius:16px 16px 0 0;padding:20px 24px;font-size:22px;font-weight:800">Kuku</div>
+  <div style="background:#fff;border:1px solid #e5e5e5;border-top:0;border-radius:0 0 16px 16px;padding:24px">
+    <p style="margin:0 0 8px;font-size:18px;font-weight:700">Coucou! Welcome to Kuku 👋</p>
+    <p style="margin:0 0 20px;color:#525252">Tap the button to confirm your email and finish creating your account.</p>
+    <a href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=email&next=/account"
+       style="display:inline-block;background:#4338ca;color:#fff;text-decoration:none;font-weight:700;padding:12px 20px;border-radius:12px">Confirm my email</a>
+    <p style="margin:20px 0 0;color:#737373;font-size:12px">Didn't sign up for Kuku? You can ignore this email.</p>
+  </div>
+</div>
