@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { supabase } from "@/lib/supabase";
 
 // The shape of one row from the `upcoming_events` view in Supabase
@@ -101,4 +102,63 @@ const dayOnly = new Intl.DateTimeFormat("en-CA", {
 // e.g. "Fri, Nov 6"
 export function formatDay(iso: string) {
   return dayOnly.format(new Date(iso));
+}
+
+// -----------------------------------------------------------------------------
+// One event, for its own page (/events/<id>)
+// -----------------------------------------------------------------------------
+
+export type EventDetail = Omit<EventListItem, "organization_name"> & {
+  organization_name: string | null;
+  organization_url: string | null;
+};
+
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+// Looks up one published event, including past ones (so a link shared in a
+// group chat still works after the event). `cache` makes the page and its
+// link preview share a single database request.
+export const getEventById = cache(
+  async (
+    id: string,
+  ): Promise<{ ok: true; event: EventDetail | null } | { ok: false }> => {
+    if (!UUID.test(id)) return { ok: true, event: null };
+
+    const { data, error } = await supabase
+      .from("events")
+      .select(
+        "id, title, description, starts_at, ends_at, campus, location, category, " +
+          "image_url, signup_url, info_url, price_cents, " +
+          "organization:organizations(name, website_url)",
+      )
+      .eq("id", id)
+      .maybeSingle();
+
+    if (error) {
+      console.error("Failed to load event from Supabase:", error.message);
+      return { ok: false };
+    }
+    if (!data) return { ok: true, event: null };
+
+    const { organization, ...rest } = data as unknown as EventListItem & {
+      organization: { name: string; website_url: string | null } | null;
+    };
+    return {
+      ok: true,
+      event: {
+        ...rest,
+        organization_name: organization?.name ?? null,
+        organization_url: organization?.website_url ?? null,
+      },
+    };
+  },
+);
+
+// An event counts as over once it ends (or 4 hours after it starts, if it has
+// no end time); same rule as the homepage list.
+export function hasEnded(e: { starts_at: string; ends_at: string | null }, now: Date) {
+  const end = e.ends_at
+    ? Date.parse(e.ends_at)
+    : Date.parse(e.starts_at) + 4 * 60 * 60 * 1000;
+  return end < now.getTime();
 }

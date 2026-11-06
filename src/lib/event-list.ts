@@ -119,12 +119,22 @@ export type EventGroup = {
   repeat: RepeatInfo | null; // null = one-off event
 };
 
+// Events with the same key are "the same event on different dates".
+export function groupKey(e: {
+  title: string;
+  organization_name: string | null;
+  campus: string;
+  location: string | null;
+}) {
+  return [e.title, e.organization_name, e.campus, e.location].join("|");
+}
+
 export function groupEvents(events: EventListItem[]): EventGroup[] {
   // Events arrive sorted by start time, so each group's first item is the
   // next occurrence, and groups end up ordered by their next date.
   const groups = new Map<string, EventListItem[]>();
   for (const e of events) {
-    const key = [e.title, e.organization_name, e.campus, e.location].join("|");
+    const key = groupKey(e);
     const list = groups.get(key);
     if (list) list.push(e);
     else groups.set(key, [e]);
