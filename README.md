@@ -49,6 +49,14 @@ cookie for a year; "Change school" switches it). To add a school, run the
 `insert into public.schools …` example at the end of
 `supabase/migrations/20261108000000_schools.sql`.
 
+## Finding events
+
+- **Bottom bar (phones):** Events · Search · Post · My events. It's hidden on bigger screens.
+- **Search** (`/<school>/search?q=…`): matches the title, description, club and place, and ignores accents and capitals ("soiree" finds "Soirée").
+- **Filters:** Today, This week, Free, campus, and a row of categories. Each filter is a link, so filtered pages can be shared.
+- **Day headings:** "Happening now", "Today", "Tomorrow", then the date. Cards get badges: *Happening now*, *Starts in 2 h*, and *🔥 Popular* once 5+ people are going.
+- **Event page:** "Add to calendar" (Apple/Outlook download a `.ics` file from `/events/<id>/calendar`; Google opens a pre-filled event), "Directions" (Google Maps; hidden for online events), and decorative circles next to the "going" count. The circles never show names or initials.
+
 ## Student accounts and RSVPs
 
 Students sign up at `/signup` (full name, email, password, school) and log in

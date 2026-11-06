@@ -1,4 +1,5 @@
 import { type EventListItem, TIME_ZONE } from "@/lib/events";
+import { CATEGORIES } from "@/lib/submission-rules";
 
 // =============================================================================
 // Filters (Today / This week / Free / SGW / Loyola)
@@ -11,19 +12,28 @@ export type Filters = {
   when?: "today" | "week";
   free?: boolean;
   campus?: string; // one of the school's campuses
+  category?: (typeof CATEGORIES)[number];
+  q?: string; // search text
 };
 
 type SearchParams = Record<string, string | string[] | undefined>;
 
 // Read filters from the address, ignoring anything unexpected.
-export function parseFilters(params: SearchParams, campuses: string[]): Filters {
+export function parseFilters(
+  params: SearchParams,
+  campuses: string[],
+): Filters {
   const one = (key: string) => {
     const value = params[key];
     return Array.isArray(value) ? value[0] : value;
   };
   const when = one("when");
   const campus = one("campus");
+  const category = one("category") as Filters["category"];
+  const q = (one("q") ?? "").trim().slice(0, 100);
   return {
+    category: category && CATEGORIES.includes(category) ? category : undefined,
+    q: q || undefined,
     when: when === "today" || when === "week" ? when : undefined,
     free: one("free") === "1" || undefined,
     campus: campus && campuses.includes(campus) ? campus : undefined,
@@ -31,7 +41,7 @@ export function parseFilters(params: SearchParams, campuses: string[]): Filters 
 }
 
 export function hasFilters(f: Filters) {
-  return Boolean(f.when || f.free || f.campus);
+  return Boolean(f.when || f.free || f.campus || f.category || f.q);
 }
 
 // Build the address for a set of filters, e.g. "/concordia?when=today&free=1".
@@ -40,6 +50,8 @@ export function filtersHref(f: Filters, basePath: string) {
   if (f.when) params.set("when", f.when);
   if (f.free) params.set("free", "1");
   if (f.campus) params.set("campus", f.campus);
+  if (f.category) params.set("category", f.category);
+  if (f.q) params.set("q", f.q);
   const query = params.toString();
   return query ? `${basePath}?${query}` : basePath;
 }
@@ -62,6 +74,8 @@ export function applyFilters(
     if (cutoff && new Date(e.starts_at) >= cutoff) return false;
     if (f.free && e.price_cents !== 0) return false;
     if (f.campus && e.campus !== f.campus) return false;
+    if (f.category && e.category !== f.category) return false;
+    if (f.q && !matchesSearch(e, f.q)) return false;
     return true;
   });
 }
@@ -207,4 +221,105 @@ function describeRepeat(list: EventListItem[]): RepeatInfo {
     until: monthDayFormat.format(starts[starts.length - 1]),
     count: list.length,
   };
+}
+
+// =============================================================================
+// Search: every word must appear in the title, club, description, place or
+// category. Ignores capitals and accents ("cafe" finds "Café").
+// =============================================================================
+
+const fold = (text: string) =>
+  text
+    .normalize("NFD")
+    .replace(/\p{Diacritic}/gu, "")
+    .toLowerCase();
+
+export function matchesSearch(e: EventListItem, q: string) {
+  const haystack = fold(
+    [
+      e.title,
+      e.organization_name,
+      e.description,
+      e.location,
+      e.campus,
+      e.category,
+    ]
+      .filter(Boolean)
+      .join(" "),
+  );
+  return fold(q)
+    .split(/\s+/)
+    .filter(Boolean)
+    .every((word) => haystack.includes(word));
+}
+
+// =============================================================================
+// Day headings ("Happening now", "Today", "Tomorrow", "Saturday, November 14")
+// =============================================================================
+
+const dayKey = new Intl.DateTimeFormat("en-CA", {
+  timeZone: TIME_ZONE,
+  year: "numeric",
+  month: "2-digit",
+  day: "2-digit",
+});
+const dayLabel = new Intl.DateTimeFormat("en-CA", {
+  timeZone: TIME_ZONE,
+  weekday: "long",
+  month: "long",
+  day: "numeric",
+});
+
+export type DaySection = { label: string; groups: EventGroup[] };
+
+export function sectionsByDay(groups: EventGroup[], now: Date): DaySection[] {
+  const today = dayKey.format(now);
+  const tomorrow = dayKey.format(new Date(now.getTime() + 864e5));
+  const sections: DaySection[] = [];
+  for (const g of groups) {
+    const start = new Date(g.next.starts_at);
+    const key = start <= now ? "now" : dayKey.format(start);
+    const label =
+      key === "now"
+        ? "Happening now"
+        : key === today
+          ? "Today"
+          : key === tomorrow
+            ? "Tomorrow"
+            : dayLabel.format(start);
+    const last = sections[sections.length - 1];
+    if (last && last.label === label) last.groups.push(g);
+    else sections.push({ label, groups: [g] });
+  }
+  return sections;
+}
+
+// =============================================================================
+// Badges on cards: "Happening now", "Starts in 40 min", "Popular"
+// =============================================================================
+
+export type Badge = { label: string; tone: "live" | "soon" | "popular" };
+
+export const POPULAR_AT = 5; // RSVPs needed for the "Popular" badge
+
+export function badgesFor(e: EventListItem, going: number, now: Date): Badge[] {
+  const badges: Badge[] = [];
+  const start = Date.parse(e.starts_at);
+  const end = e.ends_at ? Date.parse(e.ends_at) : start + 4 * 3600e3;
+  const t = now.getTime();
+  if (start <= t && t < end)
+    badges.push({ label: "Happening now", tone: "live" });
+  else if (start > t && start - t <= 3 * 3600e3) {
+    const mins = Math.max(1, Math.round((start - t) / 60000));
+    badges.push({
+      label:
+        mins < 60
+          ? `Starts in ${mins} min`
+          : `Starts in ${Math.round(mins / 60)} h`,
+      tone: "soon",
+    });
+  }
+  if (going >= POPULAR_AT)
+    badges.push({ label: "🔥 Popular", tone: "popular" });
+  return badges;
 }

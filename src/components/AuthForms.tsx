@@ -209,7 +209,10 @@ export function LoginForm({ next }: { next: string | null }) {
 }
 
 export function ForgotPasswordForm() {
-  const [state, action, pending] = useActionState<AuthState, FormData>(requestPasswordReset, {});
+  const [state, action, pending] = useActionState<AuthState, FormData>(
+    requestPasswordReset,
+    {},
+  );
   if (state.notice) {
     return (
       <p className="rounded-xl bg-emerald-50 px-4 py-3 font-medium text-emerald-800">
@@ -221,32 +224,63 @@ export function ForgotPasswordForm() {
     <form action={action} className="flex flex-col gap-4">
       {state.error && <Alert>{state.error}</Alert>}
       <Field label="Email">
-        <input name="email" type="email" required autoComplete="email" inputMode="email"
-          defaultValue={state.values?.email} className={input} />
+        <input
+          name="email"
+          type="email"
+          required
+          autoComplete="email"
+          inputMode="email"
+          defaultValue={state.values?.email}
+          className={input}
+        />
       </Field>
       <button type="submit" disabled={pending} className={button}>
         {pending ? "Sending…" : "Email me a reset link"}
       </button>
       <p className="text-center text-sm text-neutral-600">
-        Remembered it? <Link href="/login" className="font-semibold text-brand">Log in</Link>
+        Remembered it?{" "}
+        <Link href="/login" className="font-semibold text-brand">
+          Log in
+        </Link>
       </p>
     </form>
   );
 }
 
 export function ResetPasswordForm() {
-  const [state, action, pending] = useActionState<AuthState, FormData>(updatePassword, {});
+  const [state, action, pending] = useActionState<AuthState, FormData>(
+    updatePassword,
+    {},
+  );
   const e = state.errors ?? {};
   return (
     <form action={action} className="flex flex-col gap-4">
       {state.error && <Alert>{state.error}</Alert>}
-      <Field label="New password" error={e.password} hint="At least 8 characters.">
-        <input name="password" type="password" required minLength={8} maxLength={72}
-          autoComplete="new-password" className={input} />
+      <Field
+        label="New password"
+        error={e.password}
+        hint="At least 8 characters."
+      >
+        <input
+          name="password"
+          type="password"
+          required
+          minLength={8}
+          maxLength={72}
+          autoComplete="new-password"
+          className={input}
+        />
       </Field>
       <Field label="Type it again" error={e.confirm}>
-        <input name="confirm" type="password" required minLength={8} maxLength={72}
-          autoComplete="new-password" className={input} />
+        <input
+          name="confirm"
+          type="password"
+          required
+          minLength={8}
+          maxLength={72}
+          autoComplete="new-password"
+          className={input}
+        />
       </Field>
       <button type="submit" disabled={pending} className={button}>
         {pending ? "Saving…" : "Save new password"}

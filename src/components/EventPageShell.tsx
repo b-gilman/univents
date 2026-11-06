@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
+import BottomNav from "@/components/BottomNav";
 import SiteFooter from "@/components/SiteFooter";
 import ThemeColor from "@/components/ThemeColor";
 import { type School, schoolTheme } from "@/lib/schools";
@@ -34,10 +35,11 @@ export default function EventPageShell({
           )}
         </div>
       </header>
-      <main className="mx-auto w-full max-w-xl flex-1 px-4 pt-4 pb-[max(env(safe-area-inset-bottom),2rem)]">
+      <main className="mx-auto w-full max-w-xl flex-1 px-4 pt-4 pb-[calc(env(safe-area-inset-bottom)+6rem)] sm:pb-8">
         {children}
         <SiteFooter />
       </main>
+      <BottomNav schoolId={school?.id ?? null} />
     </div>
   );
 }

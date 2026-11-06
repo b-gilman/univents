@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import type { RepeatInfo } from "@/lib/event-list";
+import type { Badge, RepeatInfo } from "@/lib/event-list";
 import {
   type EventListItem,
   dateBadge,
@@ -16,10 +16,12 @@ export default function EventCard({
   event,
   repeat = null,
   going = 0,
+  badges = [],
 }: {
   event: EventListItem;
   repeat?: RepeatInfo | null;
   going?: number; // how many people RSVP'd
+  badges?: Badge[]; // "Happening now", "Starts in 40 min", "Popular"
 }) {
   const badge = dateBadge(event.starts_at);
   const price = formatPrice(event.price_cents);
@@ -42,6 +44,31 @@ export default function EventCard({
       )}
 
       <div className="flex flex-col gap-3 p-4">
+        {badges.length > 0 && (
+          <div className="-mb-1 flex flex-wrap gap-1.5">
+            {badges.map((b) => (
+              <span
+                key={b.label}
+                className={
+                  "inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-bold " +
+                  (b.tone === "live"
+                    ? "bg-emerald-50 text-emerald-700"
+                    : b.tone === "soon"
+                      ? "bg-amber-50 text-amber-800"
+                      : "bg-orange-50 text-orange-700")
+                }
+              >
+                {b.tone === "live" && (
+                  <span
+                    className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-500"
+                    aria-hidden="true"
+                  />
+                )}
+                {b.label}
+              </span>
+            ))}
+          </div>
+        )}
         <div className="flex items-start gap-3">
           <div
             className="flex w-12 shrink-0 flex-col items-center rounded-xl bg-brand py-1.5 text-white"

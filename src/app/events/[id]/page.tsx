@@ -83,6 +83,7 @@ async function EventDetails({
   const ended = hasEnded(e, new Date());
   const price = formatPrice(e.price_cents);
   const isInstagram = e.info_url?.includes("instagram.com") ?? false;
+  const place = formatPlace(e.campus, e.location);
 
   // Other upcoming dates of the same event (e.g. weekly meetings).
   const school = await getSchool(e.school_id);
@@ -92,6 +93,21 @@ async function EventDetails({
         (u) => u.id !== e.id && groupKey(u) === groupKey(e),
       )
     : [];
+
+  // Directions open Google Maps (or Apple Maps on iPhone via the web link).
+  // Online events have no place to go to.
+  const mapsHref =
+    e.campus === "Online"
+      ? null
+      : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+          [
+            e.location,
+            e.campus === "Off-campus" ? null : e.campus,
+            school?.name,
+          ]
+            .filter(Boolean)
+            .join(", "),
+        )}`;
 
   return (
     <EventPageShell school={school}>
@@ -192,6 +208,24 @@ async function EventDetails({
             <div className="flex">
               <ShareButton title={e.title} />
             </div>
+            <div className="flex flex-wrap items-start justify-center gap-2">
+              {mapsHref && (
+                <a
+                  href={mapsHref}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={SMALL_BUTTON}
+                >
+                  <span aria-hidden="true">🧭</span> Directions
+                </a>
+              )}
+              {!ended && (
+                <AddToCalendar
+                  icsHref={`/events/${e.id}/calendar`}
+                  googleHref={googleCalendarUrl(e, place)}
+                />
+              )}
+            </div>
           </div>
 
           {e.description && (
@@ -230,6 +264,77 @@ async function EventDetails({
         </div>
       </article>
     </EventPageShell>
+  );
+}
+
+const SMALL_BUTTON =
+  "flex min-h-11 items-center gap-1.5 rounded-full bg-neutral-100 px-4 text-sm font-semibold text-neutral-800 active:bg-neutral-200";
+
+// Google Calendar's "new event" page, pre-filled. Times are in UTC.
+function googleCalendarUrl(
+  e: {
+    title: string;
+    starts_at: string;
+    ends_at: string | null;
+    description: string | null;
+  },
+  place: string,
+) {
+  const utc = (iso: string) =>
+    new Date(iso)
+      .toISOString()
+      .replace(/[-:]/g, "")
+      .replace(/\.\d{3}/, "");
+  const end =
+    e.ends_at ?? new Date(Date.parse(e.starts_at) + 2 * 3600e3).toISOString();
+  const params = new URLSearchParams({
+    action: "TEMPLATE",
+    text: e.title,
+    dates: `${utc(e.starts_at)}/${utc(end)}`,
+    details: e.description ?? "",
+    location: place,
+  });
+  return `https://calendar.google.com/calendar/render?${params}`;
+}
+
+// "Add to calendar" button that opens a small menu. <details> works without
+// any JavaScript: tapping the summary shows or hides the choices.
+function AddToCalendar({
+  icsHref,
+  googleHref,
+}: {
+  icsHref: string;
+  googleHref: string;
+}) {
+  const item =
+    "flex min-h-11 items-center px-4 text-sm font-medium active:bg-neutral-50";
+  return (
+    <details className="group relative">
+      <summary
+        className={
+          SMALL_BUTTON +
+          " cursor-pointer list-none [&::-webkit-details-marker]:hidden"
+        }
+      >
+        <span aria-hidden="true">📅</span> Add to calendar
+      </summary>
+      <div className="mt-2 w-56 overflow-hidden rounded-xl bg-white py-1 shadow-lg ring-1 ring-black/10">
+        <a href={icsHref} className={item}>
+          Apple Calendar
+        </a>
+        <a
+          href={googleHref}
+          target="_blank"
+          rel="noopener noreferrer"
+          className={item}
+        >
+          Google Calendar
+        </a>
+        <a href={icsHref} className={item}>
+          Outlook / other
+        </a>
+      </div>
+    </details>
   );
 }
 

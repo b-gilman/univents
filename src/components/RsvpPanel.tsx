@@ -62,12 +62,42 @@ export default async function RsvpPanel({
         </Link>
       )}
       <p className="text-center text-sm text-neutral-600">
-        {countText && <>👥 {countText}</>}
+        {countText && (
+          <>
+            {count > 0 && <GoingCircles count={count} />}
+            {count === 0 && "👥 "}
+            {countText}
+          </>
+        )}
         {!user && <> · Log in to RSVP</>}
       </p>
       <p className="text-center text-xs text-neutral-500">
         The club hosting this event can see the names of people going.
       </p>
     </div>
+  );
+}
+
+// A small overlapping stack of coloured circles beside the "going" count.
+// They're purely decorative — no names or initials, so nobody's identity
+// is shown to the public.
+const CIRCLE_COLOURS = [
+  "bg-brand",
+  "bg-amber-400",
+  "bg-emerald-400",
+  "bg-sky-400",
+];
+
+function GoingCircles({ count }: { count: number }) {
+  const n = Math.min(count, CIRCLE_COLOURS.length);
+  return (
+    <span aria-hidden="true" className="mr-2 inline-flex align-middle">
+      {CIRCLE_COLOURS.slice(0, n).map((c, i) => (
+        <span
+          key={c}
+          className={`h-5 w-5 rounded-full ring-2 ring-white ${c} ${i > 0 ? "-ml-1.5" : ""}`}
+        />
+      ))}
+    </span>
   );
 }
