@@ -26,8 +26,8 @@ A mobile-first events site for Concordia University, built with
 ## Database (Supabase)
 
 One-time setup: in the Supabase dashboard open **SQL Editor → New query**,
-paste the contents of `supabase/migrations/20261105000000_create_events.sql`
-and click **Run**. This creates the `organizations` and `events` tables, the
+paste each file in `supabase/migrations/` (oldest first, each only once) and
+click **Run**. This creates the `organizations` and `events` tables, the
 `upcoming_events` view used by the homepage, read-only security rules, and an
 `event-images` storage bucket.
 

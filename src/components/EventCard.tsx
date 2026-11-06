@@ -100,6 +100,18 @@ export default function EventCard({ event }: { event: EventListItem }) {
             {price === "Free" ? "Sign up" : "Get tickets"}
           </a>
         )}
+
+        {/* No sign-up link? Point to the original post for details/tickets. */}
+        {!event.signup_url && event.info_url && (
+          <a
+            href={event.info_url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-1 flex min-h-11 items-center justify-center rounded-xl border border-concordia/30 px-4 text-base font-semibold text-concordia active:bg-concordia/5"
+          >
+            More info
+          </a>
+        )}
       </div>
     </article>
   );

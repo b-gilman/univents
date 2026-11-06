@@ -13,7 +13,8 @@ export type EventListItem = {
   category: string;
   image_url: string | null;
   signup_url: string | null;
-  price_cents: number;
+  info_url: string | null;
+  price_cents: number | null; // null = price not announced yet
   organization_name: string | null;
 };
 
@@ -78,8 +79,9 @@ export function dateBadge(startsAt: string) {
   };
 }
 
-// 0 → "Free", 1500 → "$15", 1250 → "$12.50"
-export function formatPrice(cents: number) {
+// null → "Price TBA", 0 → "Free", 1500 → "$15", 1250 → "$12.50"
+export function formatPrice(cents: number | null) {
+  if (cents === null) return "Price TBA";
   if (cents === 0) return "Free";
   const dollars = cents / 100;
   return Number.isInteger(dollars) ? `$${dollars}` : `$${dollars.toFixed(2)}`;
