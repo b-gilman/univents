@@ -63,7 +63,7 @@ export default function SubmitForm() {
       <Section title="Your club">
         <Field label="Club or organization" error={errors.club_name}>
           <input name="club_name" required maxLength={LIMITS.clubName} defaultValue={v("club_name")}
-            placeholder="e.g. Concordia Chess Club" className={inputClass} />
+            placeholder="e.g. Chess Club" className={inputClass} />
         </Field>
         <Field label="Contact email" hint="Only you and the site admin see this." error={errors.contact_email}>
           <input name="contact_email" type="email" required maxLength={LIMITS.email}
@@ -103,7 +103,7 @@ export default function SubmitForm() {
         </div>
         <label className="flex min-h-11 items-center gap-3">
           <input type="checkbox" name="repeats" value="weekly" checked={repeats}
-            onChange={(e) => setRepeats(e.target.checked)} className="h-5 w-5 accent-concordia" />
+            onChange={(e) => setRepeats(e.target.checked)} className="h-5 w-5 accent-brand" />
           <span>Repeats every week</span>
         </label>
         {repeats && (
@@ -113,7 +113,7 @@ export default function SubmitForm() {
               <div className="flex flex-wrap gap-2">
                 {WEEKDAYS.map((d) => (
                   <label key={d.value}
-                    className="flex min-h-10 cursor-pointer items-center rounded-full bg-white px-3 text-sm ring-1 ring-black/10 has-[:checked]:bg-concordia has-[:checked]:text-white has-[:checked]:ring-concordia">
+                    className="flex min-h-10 cursor-pointer items-center rounded-full bg-white px-3 text-sm ring-1 ring-black/10 has-[:checked]:bg-brand has-[:checked]:text-white has-[:checked]:ring-brand">
                     <input type="checkbox" name="weekdays" value={d.value} className="sr-only"
                       defaultChecked={(values.weekdays as string[] | undefined)?.includes(String(d.value))} />
                     {d.label}
@@ -136,7 +136,7 @@ export default function SubmitForm() {
             {CAMPUSES.map((c) => <option key={c} value={c}>{c}</option>)}
           </select>
         </Field>
-        <Field label="Building and room" hint="e.g. Hall Building, H-110" error={errors.location}>
+        <Field label="Building and room" hint="e.g. Student Centre, Room 110" error={errors.location}>
           <input name="location" maxLength={LIMITS.location} defaultValue={v("location")} className={inputClass} />
         </Field>
       </Section>
@@ -151,7 +151,7 @@ export default function SubmitForm() {
               { value: "unknown", label: "Not sure yet" },
             ].map((o) => (
               <label key={o.value}
-                className="flex min-h-11 cursor-pointer items-center justify-center rounded-xl bg-white px-2 text-center text-sm font-medium ring-1 ring-black/10 has-[:checked]:bg-concordia has-[:checked]:text-white has-[:checked]:ring-concordia">
+                className="flex min-h-11 cursor-pointer items-center justify-center rounded-xl bg-white px-2 text-center text-sm font-medium ring-1 ring-black/10 has-[:checked]:bg-brand has-[:checked]:text-white has-[:checked]:ring-brand">
                 <input type="radio" name="price_type" value={o.value} className="sr-only"
                   checked={priceType === o.value} onChange={() => setPriceType(o.value)} />
                 {o.label}
@@ -181,14 +181,14 @@ export default function SubmitForm() {
         <Field label="Upload your poster" hint="JPG, PNG or WebP. Big photos are shrunk automatically."
           error={errors.poster}>
           <input name="poster" type="file" accept="image/jpeg,image/png,image/webp"
-            className="block w-full text-sm file:mr-3 file:min-h-11 file:rounded-xl file:border-0 file:bg-concordia/10 file:px-4 file:font-semibold file:text-concordia" />
+            className="block w-full text-sm file:mr-3 file:min-h-11 file:rounded-xl file:border-0 file:bg-brand/10 file:px-4 file:font-semibold file:text-brand" />
         </Field>
       </Section>
 
       <div className="flex flex-col gap-2">
         <label className="flex items-start gap-3">
           <input type="checkbox" name="permission" value="yes" required defaultChecked={v("permission") === "yes"}
-            className="mt-0.5 h-5 w-5 shrink-0 accent-concordia" />
+            className="mt-0.5 h-5 w-5 shrink-0 accent-brand" />
           <span className="text-sm">
             I&apos;m part of this club or have its permission to post this event and poster.
           </span>
@@ -197,7 +197,7 @@ export default function SubmitForm() {
       </div>
 
       <button type="submit" disabled={busy}
-        className="flex min-h-12 items-center justify-center rounded-xl bg-concordia px-4 text-base font-semibold text-white active:opacity-80 disabled:opacity-60">
+        className="flex min-h-12 items-center justify-center rounded-xl bg-brand px-4 text-base font-semibold text-white active:opacity-80 disabled:opacity-60">
         {preparing ? "Preparing poster…" : pending ? "Submitting…" : "Submit event"}
       </button>
       <p className="-mt-3 text-center text-xs text-neutral-500">
@@ -208,7 +208,7 @@ export default function SubmitForm() {
 }
 
 const inputClass =
-  "block min-h-11 w-full rounded-xl border-0 bg-white px-3 py-2 text-base ring-1 ring-black/15 focus:outline-none focus:ring-2 focus:ring-concordia";
+  "block min-h-11 w-full rounded-xl border-0 bg-white px-3 py-2 text-base ring-1 ring-black/15 focus:outline-none focus:ring-2 focus:ring-brand";
 
 function Section({ title, children }: { title: string; children: ReactNode }) {
   return (
@@ -248,10 +248,10 @@ function Success({ title, dates }: { title: string; dates: string[] }) {
       )}
       <div className="mt-6 flex flex-col gap-2">
         <button type="button" onClick={() => window.location.reload()}
-          className="min-h-11 rounded-xl bg-concordia px-4 font-semibold text-white">
+          className="min-h-11 rounded-xl bg-brand px-4 font-semibold text-white">
           Submit another event
         </button>
-        <Link href="/" className="flex min-h-11 items-center justify-center rounded-xl font-semibold text-concordia">
+        <Link href="/" className="flex min-h-11 items-center justify-center rounded-xl font-semibold text-brand">
           Back to all events
         </Link>
       </div>

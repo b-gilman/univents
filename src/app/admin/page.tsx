@@ -96,7 +96,7 @@ function PendingCard({ group }: { group: PendingGroup }) {
           {sub && (
             <p className="text-neutral-600">
               Contact:{" "}
-              <a href={`mailto:${sub.contact_email}`} className="text-concordia underline">
+              <a href={`mailto:${sub.contact_email}`} className="text-brand underline">
                 {sub.contact_email}
               </a>
             </p>
@@ -125,12 +125,12 @@ function PendingCard({ group }: { group: PendingGroup }) {
         {(e.signup_url || e.info_url) && (
           <div className="flex flex-col gap-1 break-all">
             {e.signup_url && (
-              <a href={e.signup_url} target="_blank" rel="noopener noreferrer" className="text-concordia underline">
+              <a href={e.signup_url} target="_blank" rel="noopener noreferrer" className="text-brand underline">
                 Sign-up link: {e.signup_url}
               </a>
             )}
             {e.info_url && (
-              <a href={e.info_url} target="_blank" rel="noopener noreferrer" className="text-concordia underline">
+              <a href={e.info_url} target="_blank" rel="noopener noreferrer" className="text-brand underline">
                 Post link: {e.info_url}
               </a>
             )}

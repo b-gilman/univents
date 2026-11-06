@@ -49,7 +49,7 @@ export default function FilterBar({ filters }: { filters: Filters }) {
           className={
             "flex min-h-10 shrink-0 items-center rounded-full px-4 text-sm font-semibold ring-1 transition-colors " +
             (chip.active
-              ? "bg-concordia text-white ring-concordia"
+              ? "bg-brand text-white ring-brand"
               : "bg-white text-neutral-800 ring-black/10 active:bg-neutral-100")
           }
         >
@@ -60,7 +60,7 @@ export default function FilterBar({ filters }: { filters: Filters }) {
         <Link
           href="/"
           scroll={false}
-          className="flex min-h-10 shrink-0 items-center px-3 text-sm font-semibold text-concordia underline-offset-2 active:underline"
+          className="flex min-h-10 shrink-0 items-center px-3 text-sm font-semibold text-brand underline-offset-2 active:underline"
         >
           Clear
         </Link>

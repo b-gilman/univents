@@ -4,6 +4,7 @@ import { connection } from "next/server";
 import EventCard from "@/components/EventCard";
 import FilterBar from "@/components/FilterBar";
 import { getUpcomingEvents } from "@/lib/events";
+import { SITE } from "@/lib/site";
 import {
   applyFilters,
   groupEvents,
@@ -17,17 +18,10 @@ export default function Home({ searchParams }: PageProps<"/">) {
   return (
     <div className="flex min-h-dvh flex-1 flex-col bg-neutral-100 text-neutral-900">
       {/* This header doesn't need the database, so it's sent instantly. */}
-      <header className="bg-concordia px-5 pt-[max(env(safe-area-inset-top),2rem)] pb-7 text-white">
+      <header className="bg-brand px-5 pt-[max(env(safe-area-inset-top),2rem)] pb-7 text-white">
         <div className="mx-auto max-w-xl">
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-white/70">
-            Concordia University
-          </p>
-          <h1 className="mt-1 text-3xl font-bold tracking-tight">
-            Concordia Events
-          </h1>
-          <p className="mt-2 text-white/85">
-            Every club meetup, talk and party on campus — in one place.
-          </p>
+          <h1 className="text-3xl font-bold tracking-tight">{SITE.name}</h1>
+          <p className="mt-2 text-white/85">{SITE.tagline}</p>
           <Link
             href="/submit"
             className="mt-4 inline-flex min-h-10 items-center rounded-full bg-white/15 px-4 text-sm font-semibold active:bg-white/25"
@@ -57,9 +51,9 @@ export default function Home({ searchParams }: PageProps<"/">) {
 
         <Link
           href="/submit"
-          className="mt-6 flex flex-col items-center rounded-2xl border-2 border-dashed border-concordia/25 p-5 text-center active:bg-white"
+          className="mt-6 flex flex-col items-center rounded-2xl border-2 border-dashed border-brand/25 p-5 text-center active:bg-white"
         >
-          <span className="font-semibold text-concordia">Hosting an event?</span>
+          <span className="font-semibold text-brand">Hosting an event?</span>
           <span className="text-sm text-neutral-600">Submit it to be listed here →</span>
         </Link>
       </main>
@@ -109,7 +103,7 @@ async function EventList({
     return (
       <Notice title="Nothing matches these filters">
         Try removing a filter, or{" "}
-        <Link href="/" scroll={false} className="font-semibold text-concordia underline">
+        <Link href="/" scroll={false} className="font-semibold text-brand underline">
           see all events
         </Link>
         .

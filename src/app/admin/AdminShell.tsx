@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
+import { SITE } from "@/lib/site";
 
 // Frame for admin pages: a dark bar so it's obvious you're in the admin area.
 export default function AdminShell({
@@ -14,7 +15,7 @@ export default function AdminShell({
       <header className="bg-neutral-900 px-4 pt-[max(env(safe-area-inset-top),0.75rem)] pb-3 text-white">
         <div className="mx-auto flex max-w-xl items-center justify-between gap-3">
           <Link href="/admin" className="flex min-h-11 items-center font-semibold">
-            Admin · Concordia Events
+            Admin · {SITE.name}
           </Link>
           {right}
         </div>

@@ -12,7 +12,7 @@ export default function EventNotFound() {
         </p>
         <Link
           href="/"
-          className="mt-4 inline-flex min-h-11 items-center rounded-xl bg-concordia px-5 font-semibold text-white"
+          className="mt-4 inline-flex min-h-11 items-center rounded-xl bg-brand px-5 font-semibold text-white"
         >
           See all events
         </Link>

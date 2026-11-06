@@ -7,6 +7,7 @@ import { Suspense } from "react";
 import EventPageShell from "@/components/EventPageShell";
 import ShareButton from "@/components/ShareButton";
 import { groupKey } from "@/lib/event-list";
+import { SITE } from "@/lib/site";
 import {
   formatEventTime,
   formatPlace,
@@ -31,12 +32,12 @@ export async function generateMetadata({
   const when = formatEventTime(e.starts_at, e.ends_at);
   const description = `${when} · ${formatPlace(e.campus, e.location)}`;
   return {
-    title: `${e.title} · Concordia Events`,
+    title: `${e.title} · ${SITE.name}`,
     description,
     openGraph: {
       title: e.title,
       description,
-      siteName: "Concordia Events",
+      siteName: SITE.name,
       images: e.image_url ? [e.image_url] : undefined,
     },
   };
@@ -138,7 +139,7 @@ async function EventDetails({
           >
             {price}
           </span>
-          <span className="rounded-full bg-concordia/10 px-2.5 py-1 text-xs font-semibold capitalize text-concordia">
+          <span className="rounded-full bg-brand/10 px-2.5 py-1 text-xs font-semibold capitalize text-brand">
             {e.category}
           </span>
         </div>
@@ -150,7 +151,7 @@ async function EventDetails({
               href={e.signup_url}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex min-h-12 items-center justify-center rounded-xl bg-concordia px-4 text-base font-semibold text-white active:opacity-80"
+              className="flex min-h-12 items-center justify-center rounded-xl bg-brand px-4 text-base font-semibold text-white active:opacity-80"
             >
               {price === "Free" ? "Sign up" : "Get tickets"}
             </a>
@@ -163,8 +164,8 @@ async function EventDetails({
               className={
                 "flex min-h-12 items-center justify-center gap-2 rounded-xl px-4 text-base font-semibold active:opacity-80 " +
                 (e.signup_url && !ended
-                  ? "bg-white text-concordia ring-1 ring-concordia/30"
-                  : "bg-concordia text-white")
+                  ? "bg-white text-brand ring-1 ring-brand/30"
+                  : "bg-brand text-white")
               }
             >
               {isInstagram && <InstagramIcon />}

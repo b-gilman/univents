@@ -5,7 +5,7 @@ import type { ReactNode } from "react";
 export default function EventPageShell({ children }: { children: ReactNode }) {
   return (
     <div className="flex min-h-dvh flex-1 flex-col bg-neutral-100 text-neutral-900">
-      <header className="bg-concordia px-4 pt-[max(env(safe-area-inset-top),0.75rem)] pb-3 text-white">
+      <header className="bg-brand px-4 pt-[max(env(safe-area-inset-top),0.75rem)] pb-3 text-white">
         <div className="mx-auto flex max-w-xl items-center">
           <Link
             href="/"

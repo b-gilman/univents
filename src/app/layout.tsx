@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import { SITE } from "@/lib/site";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -14,17 +15,17 @@ const geistMono = Geist_Mono({
 
 // Shown in the browser tab and in search results.
 export const metadata: Metadata = {
-  title: "Concordia Events",
-  description: "Discover events at Concordia University. Coming soon.",
+  title: SITE.name,
+  description: SITE.description,
 };
 
 // Controls how the page behaves on phones. themeColor tints the browser's
-// address bar (e.g. Chrome on Android, Safari on iOS) in Concordia maroon.
+// address bar (e.g. Chrome on Android, Safari on iOS) in the brand colour.
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
-  themeColor: "#912338",
+  themeColor: SITE.brandColor,
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

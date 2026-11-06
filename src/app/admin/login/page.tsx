@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
+import { SITE } from "@/lib/site";
 import AdminShell from "../AdminShell";
 import LoginForm from "./LoginForm";
 
 export const metadata: Metadata = {
-  title: "Admin login · Concordia Events",
+  title: `Admin login · ${SITE.name}`,
   robots: { index: false, follow: false }, // keep admin pages out of Google
 };
 

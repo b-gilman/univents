@@ -17,7 +17,7 @@ export const metadata: Metadata = {
 export default function EditSubmissionPage(props: PageProps<"/admin/[submissionId]">) {
   return (
     <AdminShell>
-      <Link href="/admin" className="mb-3 inline-flex min-h-11 items-center font-semibold text-concordia">
+      <Link href="/admin" className="mb-3 inline-flex min-h-11 items-center font-semibold text-brand">
         ← Back to review
       </Link>
       <Suspense fallback={<p className="text-neutral-500">Loading…</p>}>
@@ -105,7 +105,7 @@ async function EditForm({ params, searchParams }: PageProps<"/admin/[submissionI
         <div className="flex gap-4">
           {(["free", "paid", "unknown"] as const).map((t) => (
             <label key={t} className="flex min-h-11 items-center gap-2">
-              <input type="radio" name="price_type" value={t} defaultChecked={priceType === t} className="h-5 w-5 accent-concordia" />
+              <input type="radio" name="price_type" value={t} defaultChecked={priceType === t} className="h-5 w-5 accent-brand" />
               {t === "unknown" ? "TBA" : t[0].toUpperCase() + t.slice(1)}
             </label>
           ))}
@@ -122,7 +122,7 @@ async function EditForm({ params, searchParams }: PageProps<"/admin/[submissionI
       </Field>
       {e.image_url && (
         <label className="flex min-h-11 items-center gap-2 text-sm">
-          <input type="checkbox" name="remove_poster" value="yes" className="h-5 w-5 accent-concordia" />
+          <input type="checkbox" name="remove_poster" value="yes" className="h-5 w-5 accent-brand" />
           Remove the poster
         </label>
       )}
@@ -138,7 +138,7 @@ async function EditForm({ params, searchParams }: PageProps<"/admin/[submissionI
 }
 
 const input =
-  "block min-h-11 w-full rounded-xl border-0 bg-white px-3 py-2 text-base ring-1 ring-black/15 focus:outline-none focus:ring-2 focus:ring-concordia";
+  "block min-h-11 w-full rounded-xl border-0 bg-white px-3 py-2 text-base ring-1 ring-black/15 focus:outline-none focus:ring-2 focus:ring-brand";
 
 function Field({ label, children }: { label: string; children: ReactNode }) {
   return (

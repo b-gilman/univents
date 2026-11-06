@@ -10,8 +10,9 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
-  /* Concordia maroon — use it as bg-concordia, text-concordia, etc. */
-  --color-concordia: #912338;
+  /* Brand colour, used as bg-brand, text-brand, etc. Keep in sync with
+     brandColor in src/lib/site.ts. */
+  --color-brand: #4338ca;
 }
 
 @media (prefers-color-scheme: dark) {

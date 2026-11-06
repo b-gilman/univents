@@ -41,7 +41,7 @@ export async function getUpcomingEvents(): Promise<Result> {
   return { ok: true, events: data as EventListItem[] };
 }
 
-// Concordia is in Montreal, so always show times in Montreal time, no matter
+// All listed events are in Montreal for now, so always show Montreal time, no matter
 // where the server (or the visitor's phone) is.
 export const TIME_ZONE = "America/Montreal";
 

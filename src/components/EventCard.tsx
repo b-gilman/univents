@@ -42,7 +42,7 @@ export default function EventCard({
       <div className="flex flex-col gap-3 p-4">
         <div className="flex items-start gap-3">
           <div
-            className="flex w-12 shrink-0 flex-col items-center rounded-xl bg-concordia py-1.5 text-white"
+            className="flex w-12 shrink-0 flex-col items-center rounded-xl bg-brand py-1.5 text-white"
             aria-hidden="true"
           >
             <span className="text-[11px] font-semibold tracking-wider">
@@ -115,7 +115,7 @@ export default function EventCard({
           >
             {price}
           </span>
-          <span className="rounded-full bg-concordia/10 px-2.5 py-1 text-xs font-semibold capitalize text-concordia">
+          <span className="rounded-full bg-brand/10 px-2.5 py-1 text-xs font-semibold capitalize text-brand">
             {event.category}
           </span>
         </div>
@@ -125,7 +125,7 @@ export default function EventCard({
             href={event.signup_url}
             target="_blank"
             rel="noopener noreferrer"
-            className="mt-1 flex min-h-11 items-center justify-center rounded-xl bg-concordia px-4 text-base font-semibold text-white active:opacity-80"
+            className="mt-1 flex min-h-11 items-center justify-center rounded-xl bg-brand px-4 text-base font-semibold text-white active:opacity-80"
           >
             {price === "Free" ? "Sign up" : "Get tickets"}
           </a>
@@ -134,7 +134,7 @@ export default function EventCard({
         {/* Opens this event's own page (full details, Instagram, sharing). */}
         <Link
           href={`/events/${event.id}`}
-          className="mt-1 flex min-h-11 items-center justify-center rounded-xl border border-concordia/30 px-4 text-base font-semibold text-concordia active:bg-concordia/5"
+          className="mt-1 flex min-h-11 items-center justify-center rounded-xl border border-brand/30 px-4 text-base font-semibold text-brand active:bg-brand/5"
         >
           More info
         </Link>

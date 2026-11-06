@@ -14,7 +14,7 @@ export default function LoginForm() {
           type="password"
           required
           autoComplete="current-password"
-          className="block min-h-11 w-full rounded-xl border-0 bg-white px-3 text-base ring-1 ring-black/15 focus:outline-none focus:ring-2 focus:ring-concordia"
+          className="block min-h-11 w-full rounded-xl border-0 bg-white px-3 text-base ring-1 ring-black/15 focus:outline-none focus:ring-2 focus:ring-brand"
         />
       </label>
       {state.error && (

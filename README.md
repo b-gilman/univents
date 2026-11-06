@@ -1,6 +1,6 @@
-# univents — Concordia Events
+# Univents
 
-A mobile-first events site for Concordia University, built with
+A mobile-first site for student club events, built with
 [Next.js](https://nextjs.org) (App Router), TypeScript, Tailwind CSS and Supabase.
 
 > Status: homepage lists upcoming events from Supabase. Events are added by
