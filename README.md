@@ -40,6 +40,23 @@ Batches of real club events live in `supabase/events/` (one SQL file per
 batch, safe to run twice). Their posters are in `public/events/` and are
 referenced as `/events/<file>.webp`.
 
+## Event submissions and admin
+
+- **`/submit`**: public form where clubs send in events (with poster upload).
+  Submissions are saved as `pending` and are hidden from the site.
+- **`/admin`**: password-protected page to Approve / Edit / Reject them.
+  Approving publishes the event (and creates the club in `organizations` if
+  it's new).
+
+Needs two server-only environment variables (in `.env.local` and on Vercel,
+**without** the `NEXT_PUBLIC_` prefix):
+
+- `SUPABASE_SECRET_KEY`: Supabase → Project Settings → API Keys → Secret key
+- `ADMIN_PASSWORD`: the admin login password (12+ characters)
+
+Contact emails live in the private `submissions` table, which the public key
+can't read.
+
 ## Useful commands
 
 | Command         | What it does                            |
@@ -56,5 +73,7 @@ referenced as `/events/<file>.webp`.
 - `src/app/globals.css` — global styles and the `concordia` colour
 - `src/components/EventCard.tsx` — one event card
 - `src/lib/events.ts` — loads events and formats dates/prices
-- `src/lib/supabase.ts` — the shared Supabase client
+- `src/lib/supabase.ts` — the shared Supabase client (public, read-only)
+- `src/lib/server/` — server-only code: full-access client, admin login, submission checks
+- `src/app/submit/` — the submit form · `src/app/admin/` — the admin pages
 - `supabase/` — database setup SQL and the add-an-event template

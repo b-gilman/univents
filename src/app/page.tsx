@@ -28,6 +28,12 @@ export default function Home({ searchParams }: PageProps<"/">) {
           <p className="mt-2 text-white/85">
             Every club meetup, talk and party on campus — in one place.
           </p>
+          <Link
+            href="/submit"
+            className="mt-4 inline-flex min-h-10 items-center rounded-full bg-white/15 px-4 text-sm font-semibold active:bg-white/25"
+          >
+            Hosting an event? Submit it →
+          </Link>
         </div>
       </header>
 
@@ -48,6 +54,14 @@ export default function Home({ searchParams }: PageProps<"/">) {
         <Suspense fallback={<EventListSkeleton />}>
           <EventList searchParams={searchParams} />
         </Suspense>
+
+        <Link
+          href="/submit"
+          className="mt-6 flex flex-col items-center rounded-2xl border-2 border-dashed border-concordia/25 p-5 text-center active:bg-white"
+        >
+          <span className="font-semibold text-concordia">Hosting an event?</span>
+          <span className="text-sm text-neutral-600">Submit it to be listed here →</span>
+        </Link>
       </main>
     </div>
   );
