@@ -20,7 +20,12 @@ import { supabaseAdmin } from "@/lib/server/supabase-admin";
 
 export async function login(_prev: { error: string }, fd: FormData) {
   if (!adminPasswordConfigured()) {
-    return { error: "The admin password hasn't been set up yet (ADMIN_PASSWORD on Vercel)." };
+    const set = (process.env.ADMIN_PASSWORD ?? "").length > 0;
+    return {
+      error: set
+        ? "ADMIN_PASSWORD is set on Vercel but is shorter than 12 characters. Choose a longer one, save, and redeploy."
+        : "This deployment can't see ADMIN_PASSWORD. Add it in Vercel → Settings → Environment Variables (Production ticked), then redeploy.",
+    };
   }
   const password = typeof fd.get("password") === "string" ? (fd.get("password") as string) : "";
   if (!passwordIsCorrect(password)) {
