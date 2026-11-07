@@ -139,11 +139,23 @@ Needs two server-only environment variables (in `.env.local` and on Vercel,
 Contact emails live in the private `submissions` table, which the public key
 can't read.
 
+## Import from screenshots (admin)
+
+**Admin → Import** turns screenshots of a club's Instagram post into an event:
+1. Pick the school and add 1–3 screenshots (poster + caption). Optionally paste the post link and the caption.
+2. **Read with Claude.** Claude (`claude-opus-5-5`, low effort, structured output) fills in every field, says where the poster is so the page can cut it out, and lists anything it guessed under **Check these**.
+3. Check and fix the fields, then **Publish event**. Nothing goes live without this step.
+
+Code: `src/lib/server/event-import.ts` (the Claude request and the answer format) and `src/app/admin/import/`.
+
+**Setup:** create a key at [console.anthropic.com](https://console.anthropic.com) → API Keys, then add it on Vercel as `ANTHROPIC_API_KEY` (Settings → Environment Variables) and redeploy. Add some credit under Billing. Each import costs roughly 3–5 cents.
+
 ## Admin tabs
 
-`/admin` has three tabs: **Review** (pending submissions; expired ones can be
+`/admin` has four tabs: **Review** (pending submissions; expired ones can be
 cleared), **Live events** (edit, hide/show or delete any published event,
-upcoming or past) and **Clubs** (organisers and verification).
+upcoming or past), **Clubs** (organisers, verification and club pages) and
+**Import** (add an event from screenshots, see above).
 
 ## Installable app and privacy
 

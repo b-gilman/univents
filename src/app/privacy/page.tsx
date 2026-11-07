@@ -104,7 +104,9 @@ export default function PrivacyPage() {
               us: <strong>Supabase</strong> (database, logins and image
               storage), <strong>Vercel</strong> (hosting) and{" "}
               <strong>Resend</strong> (sending emails). They process data only
-              on our behalf.
+              on our behalf. When the admin adds an event from screenshots of a
+              club&apos;s public post, <strong>Anthropic</strong> (Claude) reads
+              those screenshots; no student information is sent.
             </li>
           </ul>
         </Section>

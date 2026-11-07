@@ -4,17 +4,18 @@ import Link from "next/link";
 export default function AdminTabs({
   current,
 }: {
-  current: "review" | "events" | "clubs";
+  current: "review" | "events" | "clubs" | "import";
 }) {
   const tabs = [
     { key: "review", label: "Review", href: "/admin" },
     { key: "events", label: "Live events", href: "/admin/events" },
     { key: "clubs", label: "Clubs", href: "/admin/organisers" },
+    { key: "import", label: "Import", href: "/admin/import" },
   ] as const;
   return (
     <nav
       aria-label="Admin sections"
-      className="mb-4 grid grid-cols-3 gap-1 rounded-xl bg-neutral-200 p-1"
+      className="mb-4 grid grid-cols-4 gap-1 rounded-xl bg-neutral-200 p-1"
     >
       {tabs.map((t) => (
         <Link
