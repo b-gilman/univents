@@ -7,6 +7,7 @@ export default function SearchBox({
   autoFocus = false,
   className = "",
   hidden = {},
+  label = "Search events",
 }: {
   action: string;
   placeholder: string;
@@ -14,13 +15,14 @@ export default function SearchBox({
   autoFocus?: boolean;
   className?: string;
   hidden?: Record<string, string>; // other filters to keep while searching
+  label?: string; // read out by screen readers
 }) {
   return (
     <form action={action} method="get" role="search" className={className}>
       {Object.entries(hidden).map(([name, value]) => (
         <input key={name} type="hidden" name={name} value={value} />
       ))}
-      <label className="flex min-h-11 items-center gap-2 rounded-xl bg-white px-3 text-neutral-900 shadow-sm ring-1 ring-black/10 focus-within:ring-2 focus-within:ring-brand">
+      <label className="flex min-h-11 items-center gap-2 rounded-xl bg-card px-3 text-neutral-900 shadow-sm ring-1 ring-black/10 focus-within:ring-2 focus-within:ring-brand">
         <svg
           aria-hidden="true"
           viewBox="0 0 24 24"
@@ -32,7 +34,7 @@ export default function SearchBox({
         >
           <path d="M11 18a7 7 0 1 0 0-14 7 7 0 0 0 0 14zM20 20l-4-4" />
         </svg>
-        <span className="sr-only">Search events</span>
+        <span className="sr-only">{label}</span>
         <input
           type="search"
           name="q"

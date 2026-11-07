@@ -1,8 +1,11 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { getLocale } from "@/lib/server/locale";
 import { notFound, redirect } from "next/navigation";
 import { Suspense } from "react";
+import ClubProfileForm from "@/components/ClubProfileForm";
 import EventPageShell from "@/components/EventPageShell";
+import { getClub } from "@/lib/clubs";
 import { dateBadge, formatEventTime, hasEnded } from "@/lib/events";
 import { getRsvpCounts } from "@/lib/rsvps";
 import { getSchool } from "@/lib/schools";
@@ -10,6 +13,7 @@ import { getCurrentUser } from "@/lib/server/auth";
 import { type OrgEvent, organiserOf, orgEvents } from "@/lib/server/organisers";
 import { SITE } from "@/lib/site";
 import StatusBadge from "../StatusBadge";
+import { updateClubProfile } from "../actions";
 
 export const metadata: Metadata = {
   title: `Organiser dashboard · ${SITE.name}`,
@@ -21,7 +25,7 @@ export default function OrgDashboard(props: PageProps<"/organize/[orgId]">) {
     <Suspense
       fallback={
         <EventPageShell>
-          <div className="h-72 animate-pulse rounded-2xl bg-white" />
+          <div className="h-72 animate-pulse rounded-2xl bg-card" />
         </EventPageShell>
       }
     >
@@ -39,10 +43,12 @@ async function Content({
   const access = await organiserOf(orgId);
   if (!access) notFound();
   const { org } = access;
-  const [school, events] = await Promise.all([
+  const [school, events, clubResult] = await Promise.all([
     getSchool(org.school_id),
     orgEvents(org.id),
+    getClub(org.id),
   ]);
+  const club = clubResult.ok ? clubResult.club : null;
   const going = await getRsvpCounts(events.map((e) => e.id));
   const now = new Date();
   const upcoming = events.filter((e) => !hasEnded(e, now));
@@ -50,10 +56,18 @@ async function Content({
     .filter((e) => hasEnded(e, now))
     .reverse()
     .slice(0, 30);
-  const deleted = (await searchParams).deleted === "1";
+  const query = await searchParams;
+  const deleted = query.deleted === "1";
+  const profileSaved = query.profile === "saved";
+  const profileError =
+    typeof query.profile_error === "string" ? query.profile_error : null;
 
   return (
-    <EventPageShell school={school}>
+    <EventPageShell
+      school={school}
+      locale={await getLocale()}
+      languageSwitch={false}
+    >
       <div className="flex flex-col gap-5">
         <div>
           <p className="text-sm font-medium text-neutral-500">
@@ -67,7 +81,7 @@ async function Content({
           </p>
         </div>
         {deleted && (
-          <p className="rounded-xl bg-neutral-900 px-4 py-3 text-sm text-white">
+          <p className="rounded-xl bg-ink px-4 py-3 text-sm text-white">
             Event deleted.
           </p>
         )}
@@ -79,10 +93,46 @@ async function Content({
           + New event
         </Link>
 
+        {club && (
+          <details
+            open={Boolean(profileError)}
+            className="rounded-2xl bg-card shadow-sm ring-1 ring-black/5"
+          >
+            <summary className="flex min-h-14 cursor-pointer list-none items-center justify-between gap-3 p-4 [&::-webkit-details-marker]:hidden">
+              <span>
+                <span className="block font-semibold">Club page</span>
+                <span className="block text-sm text-neutral-600">
+                  {profileSaved
+                    ? "✓ Saved."
+                    : "Logo, description and Instagram that students see."}
+                </span>
+              </span>
+              <span className="text-sm font-semibold text-brand">Edit</span>
+            </summary>
+            <div className="flex flex-col gap-3 border-t border-black/10 p-4">
+              {profileError && (
+                <p
+                  role="alert"
+                  className="rounded-xl bg-red-50 px-4 py-3 text-sm text-red-800"
+                >
+                  {profileError}
+                </p>
+              )}
+              <Link
+                href={`/clubs/${club.id}`}
+                className="self-start text-sm font-semibold text-brand underline"
+              >
+                View your club page →
+              </Link>
+              <ClubProfileForm action={updateClubProfile} club={club} />
+            </div>
+          </details>
+        )}
+
         <section>
           <h2 className="mb-2 font-semibold">Upcoming ({upcoming.length})</h2>
           {upcoming.length === 0 ? (
-            <p className="rounded-2xl bg-white p-5 text-center text-sm text-neutral-600 shadow-sm ring-1 ring-black/5">
+            <p className="rounded-2xl bg-card p-5 text-center text-sm text-neutral-600 shadow-sm ring-1 ring-black/5">
               No upcoming events. Post one with &ldquo;New event&rdquo;.
             </p>
           ) : (
@@ -115,7 +165,7 @@ function EventRows({
   return (
     <ul
       className={
-        "divide-y divide-neutral-100 overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-black/5" +
+        "divide-y divide-neutral-100 overflow-hidden rounded-2xl bg-card shadow-sm ring-1 ring-black/5" +
         (past ? " opacity-75" : "")
       }
     >

@@ -6,8 +6,14 @@ import { isAdmin } from "@/lib/server/admin-auth";
 import { supabaseAdmin } from "@/lib/server/supabase-admin";
 import AdminShell from "../AdminShell";
 import AdminTabs from "../AdminTabs";
+import ClubProfileForm from "@/components/ClubProfileForm";
 import ConfirmButton from "../ConfirmButton";
-import { addOrganiser, removeOrganiser, setVerified } from "../actions";
+import {
+  addOrganiser,
+  adminUpdateClubProfile,
+  removeOrganiser,
+  setVerified,
+} from "../actions";
 
 export const metadata: Metadata = {
   title: "Organisers · Admin",
@@ -25,7 +31,17 @@ export default function OrganisersPage(props: PageProps<"/admin/organisers">) {
   );
 }
 
-type Org = { id: string; name: string; verified: boolean; school_id: string };
+type Org = {
+  id: string;
+  name: string;
+  verified: boolean;
+  school_id: string;
+  // Club page fields: missing until the clubs update (SQL) is run.
+  description?: string | null;
+  logo_url?: string | null;
+  instagram_url?: string | null;
+  website_url?: string | null;
+};
 type Member = {
   organization_id: string;
   user_id: string;
@@ -37,14 +53,27 @@ async function Content({ searchParams }: PageProps<"/admin/organisers">) {
   if (!(await isAdmin())) redirect("/admin/login");
   const query = await searchParams;
   const db = supabaseAdmin();
-  const [{ data: orgs }, { data: members }, schools] = await Promise.all([
+  const [orgResult, { data: members }, schools] = await Promise.all([
     db
       .from("organizations")
-      .select("id, name, verified, school_id")
+      .select(
+        "id, name, verified, school_id, description, logo_url, instagram_url, website_url",
+      )
       .order("name"),
     db.rpc("admin_org_members"),
     getSchools(),
   ]);
+  // Before the clubs update is run, the club page columns don't exist yet:
+  // fall back to the basic list (club pages can't be edited until then).
+  const hasProfiles = !orgResult.error;
+  const orgs = hasProfiles
+    ? orgResult.data
+    : (
+        await db
+          .from("organizations")
+          .select("id, name, verified, school_id")
+          .order("name")
+      ).data;
 
   return (
     <div className="flex flex-col gap-4">
@@ -91,7 +120,7 @@ async function Content({ searchParams }: PageProps<"/admin/organisers">) {
                 <article
                   key={org.id}
                   id={`org-${org.id}`}
-                  className="flex flex-col gap-3 rounded-2xl bg-white p-4 text-sm shadow-sm ring-1 ring-black/5"
+                  className="flex flex-col gap-3 rounded-2xl bg-card p-4 text-sm shadow-sm ring-1 ring-black/5"
                 >
                   <div className="flex items-center justify-between gap-3">
                     <h3 className="text-base font-semibold">{org.name}</h3>
@@ -108,7 +137,7 @@ async function Content({ searchParams }: PageProps<"/admin/organisers">) {
                           "min-h-10 rounded-full px-3 text-xs font-semibold ring-1 " +
                           (org.verified
                             ? "bg-emerald-50 text-emerald-700 ring-emerald-200"
-                            : "bg-white text-neutral-700 ring-black/15")
+                            : "bg-card text-neutral-700 ring-black/15")
                         }
                       >
                         {org.verified
@@ -154,6 +183,33 @@ async function Content({ searchParams }: PageProps<"/admin/organisers">) {
                     <p className="text-neutral-500">No organisers yet.</p>
                   )}
 
+                  {hasProfiles && (
+                    <details>
+                      <summary className="cursor-pointer font-semibold text-neutral-700">
+                        Club page{" "}
+                        <a
+                          href={`/clubs/${org.id}`}
+                          className="font-normal text-neutral-500 underline"
+                        >
+                          (view)
+                        </a>
+                      </summary>
+                      <div className="mt-3">
+                        <ClubProfileForm
+                          action={adminUpdateClubProfile}
+                          club={{
+                            ...org,
+                            description: org.description ?? null,
+                            logo_url: org.logo_url ?? null,
+                            instagram_url: org.instagram_url ?? null,
+                            website_url: org.website_url ?? null,
+                          }}
+                          dark
+                        />
+                      </div>
+                    </details>
+                  )}
+
                   <form action={addOrganiser} className="flex gap-2">
                     <input type="hidden" name="org_id" value={org.id} />
                     <input
@@ -161,11 +217,11 @@ async function Content({ searchParams }: PageProps<"/admin/organisers">) {
                       type="email"
                       required
                       placeholder="Their account email"
-                      className="block min-h-11 min-w-0 flex-1 rounded-xl border-0 bg-white px-3 text-base ring-1 ring-black/15 focus:outline-none focus:ring-2 focus:ring-neutral-900"
+                      className="block min-h-11 min-w-0 flex-1 rounded-xl border-0 bg-card px-3 text-base ring-1 ring-black/15 focus:outline-none focus:ring-2 focus:ring-neutral-900"
                     />
                     <button
                       type="submit"
-                      className="min-h-11 shrink-0 rounded-xl bg-neutral-900 px-4 font-semibold text-white"
+                      className="min-h-11 shrink-0 rounded-xl bg-ink px-4 font-semibold text-white"
                     >
                       Add
                     </button>

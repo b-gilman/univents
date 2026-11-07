@@ -7,6 +7,7 @@
 // - Hidden if already installed, on computers, or after "Not now".
 
 import { useEffect, useState } from "react";
+import { type Locale, messages } from "@/lib/i18n";
 
 type InstallEvent = Event & {
   prompt: () => Promise<void>;
@@ -15,7 +16,14 @@ type InstallEvent = Event & {
 
 const DISMISSED = "univents-install-dismissed";
 
-export default function InstallPrompt({ appName }: { appName: string }) {
+export default function InstallPrompt({
+  appName,
+  locale,
+}: {
+  appName: string;
+  locale: Locale;
+}) {
+  const t = messages(locale).install;
   const [mode, setMode] = useState<"hidden" | "android" | "ios">("hidden");
   const [installEvent, setInstallEvent] = useState<InstallEvent | null>(null);
 
@@ -70,8 +78,8 @@ export default function InstallPrompt({ appName }: { appName: string }) {
   return (
     <div
       role="region"
-      aria-label={`Install ${appName}`}
-      className="mb-4 flex items-start gap-3 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-black/5"
+      aria-label={t.region(appName)}
+      className="mb-4 flex items-start gap-3 rounded-2xl bg-card p-4 shadow-sm ring-1 ring-black/5"
     >
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
@@ -82,16 +90,14 @@ export default function InstallPrompt({ appName }: { appName: string }) {
         className="h-10 w-10 shrink-0 rounded-xl"
       />
       <div className="min-w-0 flex-1 text-sm">
-        <p className="font-semibold">Get {appName} on your home screen</p>
+        <p className="font-semibold">{t.title(appName)}</p>
         {mode === "ios" ? (
           <p className="mt-0.5 text-neutral-600">
-            Tap <ShareIcon /> <strong>Share</strong>, then{" "}
-            <strong>Add to Home Screen</strong>.
+            {t.tap} <ShareIcon /> <strong>{t.share}</strong>
+            {t.then} <strong>{t.addToHome}</strong>.
           </p>
         ) : (
-          <p className="mt-0.5 text-neutral-600">
-            Open it like an app, in one tap.
-          </p>
+          <p className="mt-0.5 text-neutral-600">{t.android}</p>
         )}
         <div className="mt-2 flex gap-2">
           {mode === "android" && (
@@ -100,7 +106,7 @@ export default function InstallPrompt({ appName }: { appName: string }) {
               onClick={install}
               className="min-h-10 rounded-full bg-brand px-4 font-semibold text-white active:opacity-80"
             >
-              Install
+              {t.install}
             </button>
           )}
           <button
@@ -108,7 +114,7 @@ export default function InstallPrompt({ appName }: { appName: string }) {
             onClick={dismiss}
             className="min-h-10 rounded-full px-3 font-medium text-neutral-600 active:bg-neutral-100"
           >
-            Not now
+            {t.notNow}
           </button>
         </div>
       </div>

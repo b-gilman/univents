@@ -14,7 +14,7 @@ export default function LoginForm() {
           type="password"
           required
           autoComplete="current-password"
-          className="block min-h-11 w-full rounded-xl border-0 bg-white px-3 text-base ring-1 ring-black/15 focus:outline-none focus:ring-2 focus:ring-brand"
+          className="block min-h-11 w-full rounded-xl border-0 bg-card px-3 text-base ring-1 ring-black/15 focus:outline-none focus:ring-2 focus:ring-brand"
         />
       </label>
       {state.error && (
@@ -25,7 +25,7 @@ export default function LoginForm() {
       <button
         type="submit"
         disabled={pending}
-        className="min-h-11 rounded-xl bg-neutral-900 px-4 font-semibold text-white disabled:opacity-60"
+        className="min-h-11 rounded-xl bg-ink px-4 font-semibold text-white disabled:opacity-60"
       >
         {pending ? "Checking…" : "Log in"}
       </button>

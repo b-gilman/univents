@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { getLocale } from "@/lib/server/locale";
 import { notFound, redirect } from "next/navigation";
 import { Suspense } from "react";
 import SubmitForm from "@/app/[school]/submit/SubmitForm";
@@ -22,7 +23,7 @@ export default function NewOrgEventPage(
     <Suspense
       fallback={
         <EventPageShell>
-          <div className="h-96 animate-pulse rounded-2xl bg-white" />
+          <div className="h-96 animate-pulse rounded-2xl bg-card" />
         </EventPageShell>
       }
     >
@@ -40,7 +41,11 @@ async function Content({ params }: PageProps<"/organize/[orgId]/new">) {
   if (!school) notFound();
 
   return (
-    <EventPageShell school={school}>
+    <EventPageShell
+      school={school}
+      locale={await getLocale()}
+      languageSwitch={false}
+    >
       <Link
         href={`/organize/${orgId}`}
         className="mb-2 inline-flex min-h-11 items-center font-semibold text-brand"

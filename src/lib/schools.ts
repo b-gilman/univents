@@ -47,5 +47,7 @@ export async function getSchool(id: string): Promise<School | null> {
 // Puts the school's colour into the page, so every `bg-brand`, `text-brand`
 // etc. inside uses it. (globals.css: --color-brand: var(--brand))
 export function schoolTheme(school: School | null): CSSProperties | undefined {
-  return school ? ({ "--brand": school.primary_color } as CSSProperties) : undefined;
+  return school
+    ? ({ "--brand": school.primary_color } as CSSProperties)
+    : undefined;
 }

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { getLocale } from "@/lib/server/locale";
 import { notFound, redirect } from "next/navigation";
 import { Suspense, type ReactNode } from "react";
 import ConfirmButton from "@/app/admin/ConfirmButton";
@@ -25,7 +26,7 @@ export default function ManageEventPage(
     <Suspense
       fallback={
         <EventPageShell>
-          <div className="h-96 animate-pulse rounded-2xl bg-white" />
+          <div className="h-96 animate-pulse rounded-2xl bg-card" />
         </EventPageShell>
       }
     >
@@ -79,7 +80,11 @@ async function Content({
   );
 
   return (
-    <EventPageShell school={school}>
+    <EventPageShell
+      school={school}
+      locale={await getLocale()}
+      languageSwitch={false}
+    >
       <div className="flex flex-col gap-5">
         <Link
           href={`/organize/${org.id}`}
@@ -119,7 +124,7 @@ async function Content({
         )}
 
         {/* Who's coming */}
-        <section className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-black/5">
+        <section className="rounded-2xl bg-card p-4 shadow-sm ring-1 ring-black/5">
           <h2 className="font-semibold">Who&apos;s coming ({people.length})</h2>
           {people.length === 0 ? (
             <p className="mt-1 text-sm text-neutral-600">No RSVPs yet.</p>
@@ -136,7 +141,7 @@ async function Content({
         <form
           action={updateOrgEvent}
           encType="multipart/form-data"
-          className="flex flex-col gap-4 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-black/5"
+          className="flex flex-col gap-4 rounded-2xl bg-card p-4 shadow-sm ring-1 ring-black/5"
         >
           {hidden}
           <h2 className="font-semibold">Edit this date</h2>
@@ -302,7 +307,7 @@ async function Content({
         </form>
 
         {/* Delete */}
-        <section className="flex flex-col gap-2 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-black/5">
+        <section className="flex flex-col gap-2 rounded-2xl bg-card p-4 shadow-sm ring-1 ring-black/5">
           <h2 className="font-semibold">Delete</h2>
           <form action={deleteOrgEvent}>
             {hidden}
@@ -333,7 +338,7 @@ async function Content({
 }
 
 const input =
-  "block min-h-11 w-full rounded-xl border-0 bg-white px-3 py-2 text-base ring-1 ring-black/15 focus:outline-none focus:ring-2 focus:ring-brand";
+  "block min-h-11 w-full rounded-xl border-0 bg-card px-3 py-2 text-base ring-1 ring-black/15 focus:outline-none focus:ring-2 focus:ring-brand";
 
 function Field({ label, children }: { label: string; children: ReactNode }) {
   return (

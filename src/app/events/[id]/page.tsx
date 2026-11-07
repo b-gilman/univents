@@ -8,7 +8,9 @@ import EventPageShell from "@/components/EventPageShell";
 import RsvpPanel from "@/components/RsvpPanel";
 import ShareButton from "@/components/ShareButton";
 import { groupKey } from "@/lib/event-list";
+import { type Locale, messages } from "@/lib/i18n";
 import { getSchool } from "@/lib/schools";
+import { getLocale } from "@/lib/server/locale";
 import { SITE } from "@/lib/site";
 import {
   formatEventTime,
@@ -66,13 +68,14 @@ async function EventDetails({
 }) {
   await connection(); // always load fresh data
   const { id } = await params;
-  const result = await getEventById(id);
+  const [result, locale] = await Promise.all([getEventById(id), getLocale()]);
+  const t = messages(locale);
 
   if (!result.ok) {
     return (
-      <EventPageShell>
-        <p className="rounded-2xl bg-white p-6 text-center shadow-sm ring-1 ring-black/5">
-          Couldn&apos;t load this event. Please try again in a minute.
+      <EventPageShell locale={locale}>
+        <p className="rounded-2xl bg-card p-6 text-center shadow-sm ring-1 ring-black/5">
+          {t.event.loadError}
         </p>
       </EventPageShell>
     );
@@ -81,9 +84,9 @@ async function EventDetails({
 
   const e = result.event;
   const ended = hasEnded(e, new Date());
-  const price = formatPrice(e.price_cents);
+  const price = formatPrice(e.price_cents, locale);
   const isInstagram = e.info_url?.includes("instagram.com") ?? false;
-  const place = formatPlace(e.campus, e.location);
+  const place = formatPlace(e.campus, e.location); // for calendars: English
 
   // Other upcoming dates of the same event (e.g. weekly meetings).
   const school = await getSchool(e.school_id);
@@ -110,12 +113,12 @@ async function EventDetails({
         )}`;
 
   return (
-    <EventPageShell school={school}>
-      <article className="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-black/5">
+    <EventPageShell school={school} locale={locale}>
+      <article className="overflow-hidden rounded-2xl bg-card shadow-sm ring-1 ring-black/5">
         {e.image_url && (
           <Image
             src={e.image_url}
-            alt={`Poster for ${e.title}`}
+            alt={t.event.posterFor(e.title)}
             width={1080}
             height={1080}
             unoptimized
@@ -127,38 +130,50 @@ async function EventDetails({
         <div className="flex flex-col gap-4 p-5">
           {ended && (
             <p className="rounded-xl bg-amber-50 px-4 py-3 text-sm font-medium text-amber-800">
-              This event has already happened.
+              {t.event.ended}
             </p>
           )}
 
           <div>
             <h1 className="text-2xl font-bold leading-tight">{e.title}</h1>
             {e.organization_name && (
-              <p className="mt-1 text-neutral-500">by {e.organization_name}</p>
+              <p className="mt-1 text-neutral-500">
+                {t.card.by}{" "}
+                {e.organization_id ? (
+                  <Link
+                    href={`/clubs/${e.organization_id}`}
+                    className="font-medium text-neutral-700 underline decoration-neutral-300 underline-offset-2 active:text-brand"
+                  >
+                    {e.organization_name}
+                  </Link>
+                ) : (
+                  e.organization_name
+                )}
+              </p>
             )}
           </div>
 
           <dl className="space-y-2 text-neutral-700">
             <div className="flex gap-2">
-              <dt className="sr-only">When</dt>
+              <dt className="sr-only">{t.card.when}</dt>
               <span aria-hidden="true">🕒</span>
               <dd>
                 <time dateTime={e.starts_at}>
-                  {formatEventTime(e.starts_at, e.ends_at)}
+                  {formatEventTime(e.starts_at, e.ends_at, locale)}
                 </time>
               </dd>
             </div>
             <div className="flex gap-2">
-              <dt className="sr-only">Where</dt>
+              <dt className="sr-only">{t.card.where}</dt>
               <span aria-hidden="true">📍</span>
-              <dd>{formatPlace(e.campus, e.location)}</dd>
+              <dd>{formatPlace(e.campus, e.location, locale)}</dd>
             </div>
           </dl>
 
           <div className="flex flex-wrap gap-2">
             <span
               className={
-                price === "Free"
+                e.price_cents === 0
                   ? "rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700"
                   : "rounded-full bg-neutral-100 px-2.5 py-1 text-xs font-semibold text-neutral-800"
               }
@@ -166,7 +181,7 @@ async function EventDetails({
               {price}
             </span>
             <span className="rounded-full bg-brand/10 px-2.5 py-1 text-xs font-semibold capitalize text-brand">
-              {e.category}
+              {t.categoryNames[e.category] ?? e.category}
             </span>
           </div>
 
@@ -186,7 +201,7 @@ async function EventDetails({
                 rel="noopener noreferrer"
                 className="flex min-h-12 items-center justify-center rounded-xl bg-brand px-4 text-base font-semibold text-white active:opacity-80"
               >
-                {price === "Free" ? "Sign up" : "Get tickets"}
+                {e.price_cents === 0 ? t.card.signUp : t.card.tickets}
               </a>
             )}
             {e.info_url && (
@@ -197,16 +212,16 @@ async function EventDetails({
                 className={
                   "flex min-h-12 items-center justify-center gap-2 rounded-xl px-4 text-base font-semibold active:opacity-80 " +
                   (e.signup_url && !ended
-                    ? "bg-white text-brand ring-1 ring-brand/30"
+                    ? "bg-card text-brand ring-1 ring-brand/30"
                     : "bg-brand text-white")
                 }
               >
                 {isInstagram && <InstagramIcon />}
-                {isInstagram ? "View on Instagram" : "View original post"}
+                {isInstagram ? t.event.viewInstagram : t.event.viewOriginal}
               </a>
             )}
             <div className="flex">
-              <ShareButton title={e.title} />
+              <ShareButton title={e.title} locale={locale} />
             </div>
             <div className="flex flex-wrap items-start justify-center gap-2">
               {mapsHref && (
@@ -216,13 +231,14 @@ async function EventDetails({
                   rel="noopener noreferrer"
                   className={SMALL_BUTTON}
                 >
-                  <span aria-hidden="true">🧭</span> Directions
+                  <span aria-hidden="true">🧭</span> {t.event.directions}
                 </a>
               )}
               {!ended && (
                 <AddToCalendar
                   icsHref={`/events/${e.id}/calendar`}
                   googleHref={googleCalendarUrl(e, place)}
+                  locale={locale}
                 />
               )}
             </div>
@@ -230,7 +246,7 @@ async function EventDetails({
 
           {e.description && (
             <section>
-              <h2 className="mb-1 font-semibold">About</h2>
+              <h2 className="mb-1 font-semibold">{t.event.about}</h2>
               <p className="whitespace-pre-line leading-relaxed text-neutral-700">
                 {e.description}
               </p>
@@ -240,7 +256,7 @@ async function EventDetails({
           {otherDates.length > 0 && (
             <section>
               <h2 className="mb-2 font-semibold">
-                {ended ? "Upcoming dates" : "Also on"}
+                {ended ? t.event.upcomingDates : t.event.alsoOn}
               </h2>
               <ul className="divide-y divide-neutral-100 rounded-xl ring-1 ring-black/5">
                 {otherDates.slice(0, 12).map((d) => (
@@ -250,7 +266,7 @@ async function EventDetails({
                       className="flex min-h-11 items-center justify-between px-4 py-2 text-sm active:bg-neutral-50"
                     >
                       <time dateTime={d.starts_at}>
-                        {formatEventTime(d.starts_at, d.ends_at)}
+                        {formatEventTime(d.starts_at, d.ends_at, locale)}
                       </time>
                       <span aria-hidden="true" className="text-neutral-400">
                         ›
@@ -302,10 +318,13 @@ function googleCalendarUrl(
 function AddToCalendar({
   icsHref,
   googleHref,
+  locale,
 }: {
   icsHref: string;
   googleHref: string;
+  locale: Locale;
 }) {
+  const t = messages(locale).event;
   const item =
     "flex min-h-11 items-center px-4 text-sm font-medium active:bg-neutral-50";
   return (
@@ -316,9 +335,9 @@ function AddToCalendar({
           " cursor-pointer list-none [&::-webkit-details-marker]:hidden"
         }
       >
-        <span aria-hidden="true">📅</span> Add to calendar
+        <span aria-hidden="true">📅</span> {t.addToCalendar}
       </summary>
-      <div className="mt-2 w-56 overflow-hidden rounded-xl bg-white py-1 shadow-lg ring-1 ring-black/10">
+      <div className="mt-2 w-56 overflow-hidden rounded-xl bg-card py-1 shadow-lg ring-1 ring-black/10">
         <a href={icsHref} className={item}>
           Apple Calendar
         </a>
@@ -331,7 +350,7 @@ function AddToCalendar({
           Google Calendar
         </a>
         <a href={icsHref} className={item}>
-          Outlook / other
+          {t.outlookOther}
         </a>
       </div>
     </details>
@@ -358,7 +377,7 @@ function InstagramIcon() {
 
 function DetailSkeleton() {
   return (
-    <div className="animate-pulse overflow-hidden rounded-2xl bg-white ring-1 ring-black/5">
+    <div className="animate-pulse overflow-hidden rounded-2xl bg-card ring-1 ring-black/5">
       <div className="aspect-[4/5] bg-neutral-200" />
       <div className="space-y-3 p-5">
         <div className="h-7 w-3/4 rounded bg-neutral-200" />

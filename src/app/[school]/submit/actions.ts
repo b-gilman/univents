@@ -26,19 +26,30 @@ export async function submitEvent(
   const values: Record<string, string | string[]> = {};
   for (const key of new Set(fd.keys())) {
     if (key === "poster" || key.startsWith("$")) continue;
-    const all = fd.getAll(key).filter((v): v is string => typeof v === "string");
+    const all = fd
+      .getAll(key)
+      .filter((v): v is string => typeof v === "string");
     values[key] = key === "weekdays" ? all : (all[0] ?? "");
   }
 
   // Spam trap: a hidden field humans never see. Bots fill it in; pretend it
   // worked so they don't learn anything.
   if (typeof fd.get("website") === "string" && fd.get("website") !== "") {
-    return { status: "success", title: String(fd.get("title") ?? ""), dates: [] };
+    return {
+      status: "success",
+      title: String(fd.get("title") ?? ""),
+      dates: [],
+    };
   }
 
   const school = await getSchool(String(fd.get("school") ?? ""));
   if (!school) {
-    return { status: "error", message: "Unknown school. Please reload the page.", errors: {}, values };
+    return {
+      status: "error",
+      message: "Unknown school. Please reload the page.",
+      errors: {},
+      values,
+    };
   }
 
   const errors: Record<string, string> = {};
@@ -51,11 +62,13 @@ export async function submitEvent(
   let posterBytes: Uint8Array | null = null;
   let posterKind: ReturnType<typeof posterType> = null;
   if (poster instanceof File && poster.size > 0) {
-    if (poster.size > LIMITS.posterBytes) errors.poster = "The poster must be under 4 MB.";
+    if (poster.size > LIMITS.posterBytes)
+      errors.poster = "The poster must be under 4 MB.";
     else {
       posterBytes = new Uint8Array(await poster.arrayBuffer());
       posterKind = posterType(posterBytes);
-      if (!posterKind) errors.poster = "The poster must be a JPG, PNG or WebP image.";
+      if (!posterKind)
+        errors.poster = "The poster must be a JPG, PNG or WebP image.";
     }
   }
 
@@ -68,13 +81,20 @@ export async function submitEvent(
     };
   }
 
-  const fail = (message: string): SubmitState => ({ status: "error", message, errors: {}, values });
+  const fail = (message: string): SubmitState => ({
+    status: "error",
+    message,
+    errors: {},
+    values,
+  });
 
   try {
     const db = supabaseAdmin();
 
     // Rate limit: at most MAX_PER_HOUR submissions per sender per hour.
-    const ip = (await headers()).get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
+    const ip =
+      (await headers()).get("x-forwarded-for")?.split(",")[0]?.trim() ||
+      "unknown";
     const hash = submitterHash(ip);
     const { count, error: countError } = await db
       .from("submissions")
@@ -83,7 +103,9 @@ export async function submitEvent(
       .gte("created_at", new Date(Date.now() - 60 * 60 * 1000).toISOString());
     if (countError) throw countError;
     if ((count ?? 0) >= MAX_PER_HOUR) {
-      return fail("You've sent a lot of events in the last hour. Please try again later.");
+      return fail(
+        "You've sent a lot of events in the last hour. Please try again later.",
+      );
     }
 
     // Upload the poster to Supabase Storage.
@@ -94,7 +116,8 @@ export async function submitEvent(
         .from(POSTER_BUCKET)
         .upload(path, posterBytes, { contentType: posterKind.mime });
       if (error) throw error;
-      image_url = db.storage.from(POSTER_BUCKET).getPublicUrl(path).data.publicUrl;
+      image_url = db.storage.from(POSTER_BUCKET).getPublicUrl(path)
+        .data.publicUrl;
     }
 
     // Save who sent it (private), then the event date(s) as "pending".
@@ -123,7 +146,9 @@ export async function submitEvent(
     if (eventsError) throw eventsError;
   } catch (err) {
     console.error("Event submission failed:", err);
-    return fail("Something went wrong saving your event. Please try again in a few minutes.");
+    return fail(
+      "Something went wrong saving your event. Please try again in a few minutes.",
+    );
   }
 
   return {

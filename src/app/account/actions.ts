@@ -8,6 +8,7 @@ import { redirect } from "next/navigation";
 import { getCurrentUser, safeNext, supabaseForUser } from "@/lib/server/auth";
 import { getSchool } from "@/lib/schools";
 import { siteUrl } from "@/lib/server/email";
+import { getMessages } from "@/lib/server/locale";
 
 export type AuthState = {
   error?: string;
@@ -36,16 +37,16 @@ export async function signUp(
       ? (fd.get("password") as string)
       : "";
   const school = await getSchool(text(fd, "school"));
+  const t = (await getMessages()).errors;
   const values = { full_name: fullName, email, school: school?.id ?? "" };
 
   const errors: Record<string, string> = {};
   if (fullName.length < 2 || fullName.length > 100)
-    errors.full_name = "Enter your full name.";
-  if (!EMAIL.test(email) || email.length > 200)
-    errors.email = "Enter a valid email address.";
-  if (password.length < 8) errors.password = "Use at least 8 characters.";
-  else if (password.length > 72) errors.password = "Use at most 72 characters.";
-  if (!school) errors.school = "Choose your school.";
+    errors.full_name = t.fullName;
+  if (!EMAIL.test(email) || email.length > 200) errors.email = t.email;
+  if (password.length < 8) errors.password = t.passwordShort;
+  else if (password.length > 72) errors.password = t.passwordLong;
+  if (!school) errors.school = t.school;
   if (Object.keys(errors).length > 0) return { errors, values };
 
   const supabase = await supabaseForUser();
@@ -65,24 +66,21 @@ export async function signUp(
       error.code === "user_already_exists"
     )
       return {
-        error: "An account with this email already exists. Log in instead.",
+        error: t.exists,
         values,
       };
     if (error.code === "weak_password" || msg.includes("password"))
-      return { errors: { password: "Choose a stronger password." }, values };
+      return { errors: { password: t.weakPassword }, values };
     console.error("Sign-up failed:", error.message);
     return {
-      error: "Couldn't create your account. Please try again in a minute.",
+      error: t.signupFailed,
       values,
     };
   }
 
   // Supabase is set to require email confirmation: no session yet.
   if (!data.session) {
-    return {
-      notice:
-        "Almost done! Check your email for a link to confirm your account.",
-    };
+    return { notice: t.checkEmail };
   }
 
   redirect(safeNext(fd.get("next")) ?? `/${school!.id}`);
@@ -99,8 +97,9 @@ export async function logIn(
     typeof fd.get("password") === "string"
       ? (fd.get("password") as string)
       : "";
+  const t = (await getMessages()).errors;
   if (!EMAIL.test(email) || !password) {
-    return { error: "Enter your email and password.", values: { email } };
+    return { error: t.emailAndPassword, values: { email } };
   }
 
   const supabase = await supabaseForUser();
@@ -108,10 +107,10 @@ export async function logIn(
   if (error) {
     if (error.code === "email_not_confirmed")
       return {
-        error: "Please confirm your email first (check your inbox).",
+        error: t.confirmFirst,
         values: { email },
       };
-    return { error: "Wrong email or password.", values: { email } };
+    return { error: t.wrongLogin, values: { email } };
   }
   redirect(safeNext(fd.get("next")) ?? "/account");
 }
@@ -175,8 +174,8 @@ export async function requestPasswordReset(
   fd: FormData,
 ): Promise<AuthState> {
   const email = text(fd, "email").toLowerCase();
-  if (!EMAIL.test(email))
-    return { error: "Enter a valid email address.", values: { email } };
+  const t = (await getMessages()).errors;
+  if (!EMAIL.test(email)) return { error: t.email, values: { email } };
 
   const supabase = await supabaseForUser();
   const { error } = await supabase.auth.resetPasswordForEmail(email, {
@@ -184,15 +183,13 @@ export async function requestPasswordReset(
   });
   if (error && error.status === 429) {
     return {
-      error: "Too many requests. Please wait a few minutes and try again.",
+      error: t.tooMany,
       values: { email },
     };
   }
   if (error) console.error("Password reset email failed:", error.message);
 
-  return {
-    notice: `If there's an account for ${email}, we've emailed it a link to choose a new password. Check your inbox (and spam folder).`,
-  };
+  return { notice: t.resetSent(email) };
 }
 
 // Sets a new password. Only works while logged in, which the emailed reset
@@ -207,30 +204,27 @@ export async function updatePassword(
       : "";
   const confirm =
     typeof fd.get("confirm") === "string" ? (fd.get("confirm") as string) : "";
+  const t = (await getMessages()).errors;
   const errors: Record<string, string> = {};
-  if (password.length < 8) errors.password = "Use at least 8 characters.";
-  else if (password.length > 72) errors.password = "Use at most 72 characters.";
-  else if (password !== confirm)
-    errors.confirm = "The two passwords don't match.";
+  if (password.length < 8) errors.password = t.passwordShort;
+  else if (password.length > 72) errors.password = t.passwordLong;
+  else if (password !== confirm) errors.confirm = t.mismatch;
   if (Object.keys(errors).length > 0) return { errors };
 
   if (!(await getCurrentUser())) {
-    return {
-      error:
-        "This reset link has expired. Request a new one from the log in page.",
-    };
+    return { error: t.resetExpired };
   }
   const supabase = await supabaseForUser();
   const { error } = await supabase.auth.updateUser({ password });
   if (error) {
     if (error.code === "same_password")
       return {
-        errors: { password: "Choose a password different from your old one." },
+        errors: { password: t.samePassword },
       };
     if (error.code === "weak_password")
-      return { errors: { password: "Choose a stronger password." } };
+      return { errors: { password: t.weakPassword } };
     console.error("Password update failed:", error.message);
-    return { error: "Couldn't change your password. Please try again." };
+    return { error: t.passwordFailed };
   }
   redirect("/account?password=updated");
 }

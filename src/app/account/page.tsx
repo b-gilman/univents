@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
+import ClubLogo from "@/components/ClubLogo";
 import EventPageShell from "@/components/EventPageShell";
 import {
   dateBadge,
@@ -9,10 +10,13 @@ import {
   formatPlace,
   hasEnded,
 } from "@/lib/events";
+import { type Locale, messages } from "@/lib/i18n";
 import { getSchool } from "@/lib/schools";
 import { getCurrentUser, supabaseForUser } from "@/lib/server/auth";
+import { getLocale } from "@/lib/server/locale";
 import { myOrganisations } from "@/lib/server/organisers";
 import { SITE } from "@/lib/site";
+import { supabase as publicDb } from "@/lib/supabase";
 import { logOut, setEmailReminders } from "./actions";
 
 export const metadata: Metadata = {
@@ -25,7 +29,7 @@ export default function AccountPage(props: PageProps<"/account">) {
     <Suspense
       fallback={
         <EventPageShell>
-          <div className="h-72 animate-pulse rounded-2xl bg-white" />
+          <div className="h-72 animate-pulse rounded-2xl bg-card" />
         </EventPageShell>
       }
     >
@@ -41,27 +45,39 @@ type MyEvent = {
   ends_at: string | null;
   campus: string;
   location: string | null;
+  organization_name?: string | null;
 };
+
+type FollowedClub = { id: string; name: string; logo_url: string | null };
 
 async function AccountContent({ searchParams }: PageProps<"/account">) {
   const query = await searchParams;
   const user = await getCurrentUser();
   if (!user) redirect("/login?next=/account");
-  const school = user.schoolId ? await getSchool(user.schoolId) : null;
-  const organises = await myOrganisations();
+  const [school, organises, locale] = await Promise.all([
+    user.schoolId ? getSchool(user.schoolId) : null,
+    myOrganisations(),
+    getLocale(),
+  ]);
+  const t = messages(locale);
 
   // My RSVPs, then the events they're for (soonest first).
   const supabase = await supabaseForUser();
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("email_reminders")
-    .eq("id", user.id)
-    .maybeSingle();
+  const [{ data: profile }, { data: rsvps }, { data: follows }] =
+    await Promise.all([
+      supabase
+        .from("profiles")
+        .select("email_reminders")
+        .eq("id", user.id)
+        .maybeSingle(),
+      supabase.from("rsvps").select("event_id").eq("user_id", user.id),
+      // Empty (not an error page) if the clubs update hasn't been run yet.
+      supabase
+        .from("follows")
+        .select("organization:organizations(id, name, logo_url)")
+        .eq("user_id", user.id),
+    ]);
   const reminders = profile?.email_reminders ?? true;
-  const { data: rsvps } = await supabase
-    .from("rsvps")
-    .select("event_id")
-    .eq("user_id", user.id);
   const ids = (rsvps ?? []).map((r) => r.event_id as string);
   let events: MyEvent[] = [];
   if (ids.length > 0) {
@@ -76,16 +92,41 @@ async function AccountContent({ searchParams }: PageProps<"/account">) {
   const upcoming = events.filter((e) => !hasEnded(e, now));
   const past = events.filter((e) => hasEnded(e, now)).reverse();
 
+  // Clubs I follow, and their next events (that I'm not already going to).
+  const clubs = (
+    (follows ?? []) as unknown as { organization: FollowedClub | null }[]
+  )
+    .map((f) => f.organization)
+    .filter((c): c is FollowedClub => Boolean(c))
+    .sort((a, b) => a.name.localeCompare(b.name));
+  let fromClubs: MyEvent[] = [];
+  if (clubs.length > 0) {
+    const { data } = await publicDb
+      .from("upcoming_events")
+      .select(
+        "id, title, starts_at, ends_at, campus, location, organization_name",
+      )
+      .in(
+        "organization_id",
+        clubs.map((c) => c.id),
+      )
+      .limit(30);
+    fromClubs = ((data ?? []) as MyEvent[])
+      .filter((e) => !ids.includes(e.id))
+      .slice(0, 10);
+  }
+  const clubsHref = school ? `/${school.id}/clubs` : "/";
+
   return (
-    <EventPageShell school={school}>
+    <EventPageShell school={school} locale={locale}>
       <div className="flex flex-col gap-5">
         {query.password === "updated" && (
           <p className="rounded-xl bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-800">
-            Your password has been changed.
+            {t.account.passwordChanged}
           </p>
         )}
         <div>
-          <h1 className="text-2xl font-bold">My events</h1>
+          <h1 className="text-2xl font-bold">{t.account.title}</h1>
           <p className="text-neutral-600">
             {user.fullName}
             {school ? ` · ${school.short_name}` : ""}
@@ -93,36 +134,86 @@ async function AccountContent({ searchParams }: PageProps<"/account">) {
         </div>
 
         <section>
-          <h2 className="mb-2 font-semibold">Going</h2>
+          <h2 className="mb-2 font-semibold">{t.account.going}</h2>
           {upcoming.length === 0 ? (
-            <div className="rounded-2xl bg-white p-5 text-center text-sm text-neutral-600 shadow-sm ring-1 ring-black/5">
-              You haven&apos;t RSVP&apos;d to anything yet.{" "}
+            <div className="rounded-2xl bg-card p-5 text-center text-sm text-neutral-600 shadow-sm ring-1 ring-black/5">
+              {t.account.nothingYet}{" "}
               <Link
                 href={school ? `/${school.id}` : "/"}
                 className="font-semibold text-brand underline"
               >
-                Browse events
+                {t.account.browse}
               </Link>
             </div>
           ) : (
-            <EventRows events={upcoming} />
+            <EventRows events={upcoming} locale={locale} />
           )}
         </section>
 
+        <section>
+          <h2 className="mb-2 font-semibold">{t.account.fromClubs}</h2>
+          {clubs.length === 0 ? (
+            <div className="rounded-2xl bg-card p-5 text-center text-sm text-neutral-600 shadow-sm ring-1 ring-black/5">
+              {t.account.noFollows}{" "}
+              <Link
+                href={clubsHref}
+                className="font-semibold text-brand underline"
+              >
+                {t.account.findClubs}
+              </Link>
+            </div>
+          ) : fromClubs.length === 0 ? (
+            <p className="rounded-2xl bg-card p-5 text-center text-sm text-neutral-600 shadow-sm ring-1 ring-black/5">
+              {t.clubs.noUpcoming}
+            </p>
+          ) : (
+            <EventRows events={fromClubs} locale={locale} showClub />
+          )}
+        </section>
+
+        {clubs.length > 0 && (
+          <section>
+            <h2 className="mb-2 font-semibold">{t.account.followedClubs}</h2>
+            <ul className="flex flex-wrap gap-2">
+              {clubs.map((c) => (
+                <li key={c.id}>
+                  <Link
+                    href={`/clubs/${c.id}`}
+                    className="flex min-h-11 items-center gap-2 rounded-full bg-card py-1 pr-4 pl-1 text-sm font-semibold ring-1 ring-black/10 active:bg-neutral-50"
+                  >
+                    <ClubLogo name={c.name} logoUrl={c.logo_url} size="sm" />
+                    <span className="max-w-[14rem] truncate">{c.name}</span>
+                  </Link>
+                </li>
+              ))}
+              <li>
+                <Link
+                  href={clubsHref}
+                  className="flex min-h-11 items-center rounded-full px-3 text-sm font-semibold text-brand active:underline"
+                >
+                  + {t.account.findClubs}
+                </Link>
+              </li>
+            </ul>
+          </section>
+        )}
+
         {past.length > 0 && (
           <section>
-            <h2 className="mb-2 font-semibold text-neutral-500">Past</h2>
-            <EventRows events={past.slice(0, 20)} muted />
+            <h2 className="mb-2 font-semibold text-neutral-500">
+              {t.account.past}
+            </h2>
+            <EventRows events={past.slice(0, 20)} locale={locale} muted />
           </section>
         )}
 
         {organises.length > 0 && (
           <Link
             href="/organize"
-            className="flex min-h-14 items-center justify-between gap-3 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-black/5 active:bg-neutral-50"
+            className="flex min-h-14 items-center justify-between gap-3 rounded-2xl bg-card p-4 shadow-sm ring-1 ring-black/5 active:bg-neutral-50"
           >
             <span>
-              <span className="block font-semibold">Organiser dashboard</span>
+              <span className="block font-semibold">{t.account.organiser}</span>
               <span className="block text-sm text-neutral-600">
                 {organises.map((o) => o.name).join(", ")}
               </span>
@@ -135,22 +226,20 @@ async function AccountContent({ searchParams }: PageProps<"/account">) {
 
         <form
           action={setEmailReminders}
-          className="flex items-center justify-between gap-3 rounded-2xl bg-white p-4 text-sm shadow-sm ring-1 ring-black/5"
+          className="flex items-center justify-between gap-3 rounded-2xl bg-card p-4 text-sm shadow-sm ring-1 ring-black/5"
         >
           <input type="hidden" name="on" value={reminders ? "no" : "yes"} />
           <span>
-            <span className="block font-semibold">Reminder emails</span>
+            <span className="block font-semibold">{t.account.reminders}</span>
             <span className="block text-neutral-600">
-              {reminders
-                ? "We'll email you the day before events you're going to."
-                : "Off. You won't get reminder emails."}
+              {reminders ? t.account.remindersOn : t.account.remindersOff}
             </span>
           </span>
           <button
             type="submit"
             role="switch"
             aria-checked={reminders}
-            aria-label="Reminder emails"
+            aria-label={t.account.reminders}
             className={
               "relative h-8 w-14 shrink-0 rounded-full transition-colors " +
               (reminders ? "bg-brand" : "bg-neutral-300")
@@ -165,14 +254,14 @@ async function AccountContent({ searchParams }: PageProps<"/account">) {
           </button>
         </form>
 
-        <div className="rounded-2xl bg-white p-4 text-sm shadow-sm ring-1 ring-black/5">
-          <p className="text-neutral-600">Logged in as {user.email}</p>
+        <div className="rounded-2xl bg-card p-4 text-sm shadow-sm ring-1 ring-black/5">
+          <p className="text-neutral-600">{t.account.loggedInAs(user.email)}</p>
           <form action={logOut} className="mt-3">
             <button
               type="submit"
               className="min-h-11 w-full rounded-xl font-semibold text-red-700 ring-1 ring-red-200 active:bg-red-50"
             >
-              Log out
+              {t.account.logOut}
             </button>
           </form>
         </div>
@@ -183,20 +272,24 @@ async function AccountContent({ searchParams }: PageProps<"/account">) {
 
 function EventRows({
   events,
+  locale,
   muted = false,
+  showClub = false,
 }: {
   events: MyEvent[];
+  locale: Locale;
   muted?: boolean;
+  showClub?: boolean; // show the club's name instead of the place
 }) {
   return (
     <ul
       className={
-        "divide-y divide-neutral-100 overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-black/5" +
+        "divide-y divide-neutral-100 overflow-hidden rounded-2xl bg-card shadow-sm ring-1 ring-black/5" +
         (muted ? " opacity-70" : "")
       }
     >
       {events.map((e) => {
-        const badge = dateBadge(e.starts_at);
+        const badge = dateBadge(e.starts_at, locale);
         return (
           <li key={e.id}>
             <Link
@@ -217,10 +310,12 @@ function EventRows({
               <span className="min-w-0 flex-1">
                 <span className="block truncate font-semibold">{e.title}</span>
                 <span className="block truncate text-sm text-neutral-600">
-                  {formatEventTime(e.starts_at, e.ends_at)}
+                  {formatEventTime(e.starts_at, e.ends_at, locale)}
                 </span>
                 <span className="block truncate text-xs text-neutral-500">
-                  {formatPlace(e.campus, e.location)}
+                  {showClub && e.organization_name
+                    ? e.organization_name
+                    : formatPlace(e.campus, e.location, locale)}
                 </span>
               </span>
               <span aria-hidden="true" className="text-neutral-400">

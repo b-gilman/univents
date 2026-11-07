@@ -87,13 +87,13 @@ async function Content({ searchParams }: PageProps<"/admin/events">) {
         </Link>
       </div>
       {query.deleted === "1" && (
-        <p className="rounded-xl bg-neutral-900 px-4 py-3 text-sm text-white">
+        <p className="rounded-xl bg-ink px-4 py-3 text-sm text-white">
           Event deleted.
         </p>
       )}
 
       {events.length === 0 ? (
-        <p className="rounded-2xl bg-white p-6 text-center text-neutral-600 shadow-sm ring-1 ring-black/5">
+        <p className="rounded-2xl bg-card p-6 text-center text-neutral-600 shadow-sm ring-1 ring-black/5">
           No events.
         </p>
       ) : (
@@ -105,7 +105,7 @@ async function Content({ searchParams }: PageProps<"/admin/events">) {
               <li
                 key={e.id}
                 className={
-                  "rounded-2xl bg-white p-3 text-sm shadow-sm ring-1 ring-black/5" +
+                  "rounded-2xl bg-card p-3 text-sm shadow-sm ring-1 ring-black/5" +
                   (hidden ? " opacity-70" : "")
                 }
               >

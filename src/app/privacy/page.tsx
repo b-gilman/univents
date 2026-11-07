@@ -22,8 +22,8 @@ export default function PrivacyPage() {
   );
 
   return (
-    <EventPageShell>
-      <article className="flex flex-col gap-5 rounded-2xl bg-white p-5 leading-relaxed text-neutral-800 shadow-sm ring-1 ring-black/5">
+    <EventPageShell locale="en" languageSwitch={false}>
+      <article className="flex flex-col gap-5 rounded-2xl bg-card p-5 leading-relaxed text-neutral-800 shadow-sm ring-1 ring-black/5">
         <header>
           <h1 className="text-2xl font-bold">Privacy</h1>
           <p className="text-sm text-neutral-500">

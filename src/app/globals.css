@@ -5,8 +5,11 @@
      colour (see schoolTheme in src/lib/schools.ts). Keep in sync with
      brandColor in src/lib/site.ts. */
   --brand: #4338ca;
-  --background: #ffffff;
+  --card: #ffffff; /* cards, boxes, inputs (bg-card) */
+  --ink: #171717; /* dark buttons and bars with white text (bg-ink) */
+  --background: #f5f5f5;
   --foreground: #171717;
+  color-scheme: light dark; /* native form controls and scrollbars */
 }
 
 @theme inline {
@@ -16,12 +19,57 @@
   --font-mono: var(--font-geist-mono);
   /* Use it as bg-brand, text-brand, ring-brand, etc. */
   --color-brand: var(--brand);
+  --color-card: var(--card);
+  --color-ink: var(--ink);
 }
 
+/* ---------------------------------------------------------------------------
+   Dark mode: follows the phone's or computer's setting automatically.
+   Instead of adding a dark version to every element, we swap the colours
+   themselves: greys flip (light ↔ dark), cards turn charcoal, thin black
+   outlines become thin white ones, and the soft green / amber / red labels
+   become dark tints with light text. Text on coloured buttons stays white.
+   --------------------------------------------------------------------------- */
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --card: oklch(21.5% 0 0);
+    --ink: oklch(36% 0 0);
+    --background: oklch(14.5% 0 0);
+    --foreground: oklch(95% 0 0);
+
+    --color-black: #fff;
+    --color-neutral-50: oklch(25% 0 0);
+    --color-neutral-100: oklch(14.5% 0 0);
+    --color-neutral-200: oklch(30% 0 0);
+    --color-neutral-300: oklch(38% 0 0);
+    --color-neutral-400: oklch(56% 0 0);
+    --color-neutral-500: oklch(66% 0 0);
+    --color-neutral-600: oklch(74% 0 0);
+    --color-neutral-700: oklch(82% 0 0);
+    --color-neutral-800: oklch(88% 0 0);
+    --color-neutral-900: oklch(95% 0 0);
+    --color-neutral-950: oklch(98% 0 0);
+
+    --color-emerald-50: oklch(29% 0.06 163);
+    --color-emerald-200: oklch(40% 0.08 163);
+    --color-emerald-700: oklch(82% 0.13 163);
+    --color-emerald-800: oklch(86% 0.11 163);
+    --color-amber-50: oklch(30% 0.06 75);
+    --color-amber-700: oklch(84% 0.13 80);
+    --color-amber-800: oklch(86% 0.12 80);
+    --color-amber-900: oklch(90% 0.1 80);
+    --color-orange-50: oklch(30% 0.07 50);
+    --color-orange-700: oklch(82% 0.13 55);
+    --color-red-50: oklch(28% 0.07 25);
+    --color-red-200: oklch(42% 0.1 25);
+    --color-red-700: oklch(78% 0.14 25);
+    --color-red-800: oklch(82% 0.12 25);
+  }
+
+  /* A school's colour can be too dark to read on a dark background, so
+     brand-coloured TEXT is lightened. Brand backgrounds stay as they are. */
+  .text-brand {
+    color: color-mix(in oklab, var(--brand) 50%, white);
   }
 }
 

@@ -7,11 +7,14 @@ import BottomNav from "@/components/BottomNav";
 import EventFeed, { EventFeedSkeleton } from "@/components/EventFeed";
 import FilterBar from "@/components/FilterBar";
 import InstallPrompt from "@/components/InstallPrompt";
+import LanguageSwitch from "@/components/LanguageSwitch";
 import SearchBox from "@/components/SearchBox";
 import SiteFooter from "@/components/SiteFooter";
 import ThemeColor from "@/components/ThemeColor";
 import { filtersHref, parseFilters } from "@/lib/event-list";
+import { messages } from "@/lib/i18n";
 import { getSchool, schoolTheme } from "@/lib/schools";
+import { getLocale } from "@/lib/server/locale";
 import { SITE } from "@/lib/site";
 
 // A school's home page, e.g. /concordia: its colours, its name, its events.
@@ -44,9 +47,12 @@ async function SchoolHomeContent({
   if (!school) notFound();
   const basePath = `/${school.id}`;
   const filters = parseFilters(await searchParams, school.campuses);
+  const locale = await getLocale();
+  const t = messages(locale);
 
   return (
     <div
+      lang={locale}
       style={schoolTheme(school)}
       className="flex min-h-dvh flex-1 flex-col bg-neutral-100 text-neutral-900"
     >
@@ -57,13 +63,14 @@ async function SchoolHomeContent({
             <p className="text-xs font-semibold uppercase tracking-[0.2em] text-white/70">
               {SITE.name}
             </p>
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2">
               <Link
                 href="/?change=1"
-                className="flex min-h-10 items-center text-sm font-medium text-white/80 underline-offset-2 active:underline"
+                className="flex min-h-10 items-center px-1 text-sm font-medium text-white/80 underline-offset-2 active:underline"
               >
-                Change school
+                {t.header.changeSchool}
               </Link>
+              <LanguageSwitch locale={locale} />
               <Suspense
                 fallback={
                   <span className="h-10 w-20 rounded-full bg-white/15" />
@@ -76,10 +83,11 @@ async function SchoolHomeContent({
           <h1 className="mt-1 text-3xl font-bold tracking-tight">
             {school.name}
           </h1>
-          <p className="mt-2 text-white/85">{SITE.tagline}</p>
+          <p className="mt-2 text-white/85">{t.site.tagline}</p>
           <SearchBox
             action={`${basePath}/search`}
-            placeholder={`Search ${school.short_name} events`}
+            placeholder={t.header.searchSchool(school.short_name)}
+            label={t.search.label}
             className="mt-4"
           />
         </div>
@@ -92,10 +100,11 @@ async function SchoolHomeContent({
             filters={filters}
             campuses={school.campuses}
             basePath={basePath}
+            locale={locale}
           />
         </div>
 
-        <InstallPrompt appName={SITE.name} />
+        <InstallPrompt appName={SITE.name} locale={locale} />
 
         <Suspense fallback={<EventFeedSkeleton />}>
           <EventFeed
@@ -107,16 +116,14 @@ async function SchoolHomeContent({
 
         <Link
           href={`${basePath}/submit`}
-          className="mt-6 flex flex-col items-center rounded-2xl border-2 border-dashed border-brand/25 p-5 text-center active:bg-white"
+          className="mt-6 flex flex-col items-center rounded-2xl border-2 border-dashed border-brand/25 p-5 text-center active:bg-card"
         >
-          <span className="font-semibold text-brand">Hosting an event?</span>
-          <span className="text-sm text-neutral-600">
-            Submit it to be listed here →
-          </span>
+          <span className="font-semibold text-brand">{t.header.hosting}</span>
+          <span className="text-sm text-neutral-600">{t.header.submitIt}</span>
         </Link>
-        <SiteFooter />
+        <SiteFooter locale={locale} />
       </main>
-      <BottomNav schoolId={school.id} />
+      <BottomNav schoolId={school.id} locale={locale} />
     </div>
   );
 }

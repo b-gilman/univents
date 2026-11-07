@@ -57,6 +57,27 @@ cookie for a year; "Change school" switches it). To add a school, run the
 - **Day headings:** "Happening now", "Today", "Tomorrow", then the date. Cards get badges: *Happening now*, *Starts in 2 h*, and *🔥 Popular* once 5+ people are going.
 - **Event page:** "Add to calendar" (Apple/Outlook download a `.ics` file from `/events/<id>/calendar`; Google opens a pre-filled event), "Directions" (Google Maps; hidden for online events), and decorative circles next to the "going" count. The circles never show names or initials.
 
+## Clubs and following
+
+Needs `supabase/migrations/20261113000000_clubs_and_follows.sql` (run once).
+
+- **Club pages** (`/clubs/<id>`): logo, description, Instagram, website, verified tick, and the club's upcoming events. Tap a club's name on any event card or event page to open it. Each school has a club list at `/<school>/clubs` (linked from Search).
+- **Editing a club page:** organisers use **Club page → Edit** on their dashboard; the admin uses **Club page** under each club on the Clubs tab. Logos are JPG/PNG/WebP under 2 MB, stored in `event-images/clubs/`.
+- **Following:** logged-in students tap **Follow** on a club page. *My events* then shows "Coming up from your clubs" and the clubs they follow. Only a follower **count** is public; nobody (not even the club) sees who follows.
+- **Emails:** the daily email (`/api/cron/reminders`) now also lists events that clubs you follow published since the last email, including events the admin approves later. Each event is announced once. The *Reminder emails* switch on *My events* turns both off.
+
+## French / English
+
+- A **FR / EN** button sits in the school page's header, and **Français / English** in every page's footer. The choice is saved in the `lang` cookie for a year. Before anyone chooses, the phone's language decides.
+- All student pages are translated: event list, search, event and club pages, My events, log in and sign up, and error messages. Dates, times and prices follow Quebec French style ("sam. 7 nov., 18 h 40", "5 $").
+- Event titles and descriptions stay as the clubs wrote them. Search understands category names in both languages ("carrière").
+- **Still English only:** the submit form, organiser dashboard, admin, privacy policy and emails.
+- Every piece of text is in `src/lib/i18n.ts`, in English and French side by side. TypeScript flags any French text that's missing.
+
+## Dark mode
+
+The site follows the phone's light/dark setting automatically. Instead of a dark version of every element, `src/app/globals.css` swaps the colours themselves when the phone is in dark mode: the greys flip, cards (`bg-card`) turn charcoal, and the green/amber/red labels become dark tints. School colours stay, with brand-coloured text lightened so it's readable. Use `bg-card` (not `bg-white`) for boxes, and `bg-ink` for dark buttons with white text.
+
 ## Student accounts and RSVPs
 
 Students sign up at `/signup` (full name, email, password, school) and log in

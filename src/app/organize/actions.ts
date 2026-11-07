@@ -10,6 +10,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { formatEventTime } from "@/lib/events";
 import { allCampuses, getSchool } from "@/lib/schools";
+import { saveClubProfile } from "@/lib/server/club-profile";
 import { UUID, organiserOf, orgEvents } from "@/lib/server/organisers";
 import {
   parseEventFields,
@@ -203,4 +204,20 @@ export async function deleteOrgEvent(fd: FormData) {
   }
   revalidatePath(`/organize/${org.id}`);
   redirect(`/organize/${org.id}?deleted=1`);
+}
+
+// ------------------------------------------------------------- club page
+
+// Description, logo, Instagram and website shown on the club's public page.
+export async function updateClubProfile(fd: FormData) {
+  const orgId = String(fd.get("org_id") ?? "");
+  const access = await organiserOf(orgId);
+  if (!access) redirect("/organize");
+  const result = await saveClubProfile(orgId, fd);
+  revalidatePath(`/clubs/${orgId}`);
+  redirect(
+    result.ok
+      ? `/organize/${orgId}?profile=saved`
+      : `/organize/${orgId}?profile_error=${encodeURIComponent(result.error)}`,
+  );
 }

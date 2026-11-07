@@ -65,7 +65,7 @@ async function Content({
   return (
     <form
       action={adminUpdateEvent}
-      className="flex flex-col gap-4 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-black/5"
+      className="flex flex-col gap-4 rounded-2xl bg-card p-4 shadow-sm ring-1 ring-black/5"
     >
       <input type="hidden" name="event_id" value={e.id} />
       <div className="flex items-center justify-between gap-3">
@@ -224,7 +224,7 @@ async function Content({
       )}
       <button
         type="submit"
-        className="min-h-12 rounded-xl bg-neutral-900 px-4 font-semibold text-white active:opacity-80"
+        className="min-h-12 rounded-xl bg-ink px-4 font-semibold text-white active:opacity-80"
       >
         Save changes
       </button>
@@ -233,7 +233,7 @@ async function Content({
 }
 
 const input =
-  "block min-h-11 w-full rounded-xl border-0 bg-white px-3 py-2 text-base ring-1 ring-black/15 focus:outline-none focus:ring-2 focus:ring-neutral-900";
+  "block min-h-11 w-full rounded-xl border-0 bg-card px-3 py-2 text-base ring-1 ring-black/15 focus:outline-none focus:ring-2 focus:ring-neutral-900";
 
 function Field({ label, children }: { label: string; children: ReactNode }) {
   return (

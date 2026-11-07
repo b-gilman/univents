@@ -6,7 +6,8 @@
 //   2. brandColor below      (tints the phone's address bar)
 export const SITE = {
   name: "Kuku",
-  tagline: "Coucou! Every club meetup, talk and party on campus — in one place.",
+  tagline:
+    "Coucou! Every club meetup, talk and party on campus — in one place.",
   description: "Discover student club events, talks and parties on campus.",
   brandColor: "#4338ca",
   // Shown on /privacy for privacy requests (access, correction, deletion).

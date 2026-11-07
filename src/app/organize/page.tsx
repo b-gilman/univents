@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { getLocale } from "@/lib/server/locale";
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
 import EventPageShell from "@/components/EventPageShell";
@@ -18,7 +19,7 @@ export default function OrganizePage() {
     <Suspense
       fallback={
         <EventPageShell>
-          <div className="h-48 animate-pulse rounded-2xl bg-white" />
+          <div className="h-48 animate-pulse rounded-2xl bg-card" />
         </EventPageShell>
       }
     >
@@ -38,10 +39,14 @@ async function Content() {
   if (orgs.length === 1) redirect(`/organize/${orgs[0].id}`);
 
   return (
-    <EventPageShell school={school}>
+    <EventPageShell
+      school={school}
+      locale={await getLocale()}
+      languageSwitch={false}
+    >
       <h1 className="mb-4 text-2xl font-bold">Organiser dashboard</h1>
       {orgs.length === 0 ? (
-        <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-black/5">
+        <div className="rounded-2xl bg-card p-5 shadow-sm ring-1 ring-black/5">
           <p className="font-semibold">
             You&apos;re not an organiser of any club yet.
           </p>
@@ -56,7 +61,7 @@ async function Content() {
             <li key={o.id}>
               <Link
                 href={`/organize/${o.id}`}
-                className="flex min-h-16 items-center justify-between gap-3 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-black/5 active:bg-neutral-50"
+                className="flex min-h-16 items-center justify-between gap-3 rounded-2xl bg-card p-4 shadow-sm ring-1 ring-black/5 active:bg-neutral-50"
               >
                 <span>
                   <span className="block font-semibold">{o.name}</span>

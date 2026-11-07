@@ -9,6 +9,7 @@ import {
   formatPlace,
   formatPrice,
 } from "@/lib/events";
+import { type Locale, messages } from "@/lib/i18n";
 
 // `event` is the next (soonest) occurrence. `repeat` is set when the same
 // event happens several times (e.g. weekly meetings), shown as one card.
@@ -17,17 +18,20 @@ export default function EventCard({
   repeat = null,
   going = 0,
   badges = [],
+  locale = "en",
 }: {
   event: EventListItem;
   repeat?: RepeatInfo | null;
   going?: number; // how many people RSVP'd
   badges?: Badge[]; // "Happening now", "Starts in 40 min", "Popular"
+  locale?: Locale;
 }) {
-  const badge = dateBadge(event.starts_at);
-  const price = formatPrice(event.price_cents);
+  const t = messages(locale);
+  const badge = dateBadge(event.starts_at, locale);
+  const price = formatPrice(event.price_cents, locale);
 
   return (
-    <article className="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-black/5">
+    <article className="overflow-hidden rounded-2xl bg-card shadow-sm ring-1 ring-black/5">
       {event.image_url && (
         // Shown at its natural shape (square/portrait posters aren't cropped).
         // width/height only reserve space until the real image loads.
@@ -86,7 +90,18 @@ export default function EventCard({
             </h3>
             {event.organization_name && (
               <p className="truncate text-sm text-neutral-500">
-                by {event.organization_name}
+                {t.card.by}{" "}
+                {event.organization_id ? (
+                  // Tapping the club's name opens the club's page.
+                  <Link
+                    href={`/clubs/${event.organization_id}`}
+                    className="font-medium text-neutral-700 underline decoration-neutral-300 underline-offset-2 active:text-brand"
+                  >
+                    {event.organization_name}
+                  </Link>
+                ) : (
+                  event.organization_name
+                )}
               </p>
             )}
           </div>
@@ -94,43 +109,43 @@ export default function EventCard({
 
         <dl className="space-y-1 text-sm text-neutral-700">
           <div className="flex gap-2">
-            <dt className="sr-only">When</dt>
+            <dt className="sr-only">{t.card.when}</dt>
             <span aria-hidden="true">🕒</span>
             <dd>
               {repeat ? (
                 repeat.schedule
               ) : (
                 <time dateTime={event.starts_at}>
-                  {formatEventTime(event.starts_at, event.ends_at)}
+                  {formatEventTime(event.starts_at, event.ends_at, locale)}
                 </time>
               )}
             </dd>
           </div>
           {repeat && (
             <div className="flex gap-2">
-              <dt className="sr-only">Next date</dt>
+              <dt className="sr-only">{t.card.nextDate}</dt>
               <span aria-hidden="true">🔁</span>
               <dd>
-                Next:{" "}
+                {t.card.next}{" "}
                 <time dateTime={event.starts_at} className="font-medium">
-                  {formatDay(event.starts_at)}
+                  {formatDay(event.starts_at, locale)}
                 </time>{" "}
                 <span className="text-neutral-500">
-                  · until {repeat.until} ({repeat.count} dates)
+                  {t.card.until(repeat.until, repeat.count)}
                 </span>
               </dd>
             </div>
           )}
           <div className="flex gap-2">
-            <dt className="sr-only">Where</dt>
+            <dt className="sr-only">{t.card.where}</dt>
             <span aria-hidden="true">📍</span>
-            <dd>{formatPlace(event.campus, event.location)}</dd>
+            <dd>{formatPlace(event.campus, event.location, locale)}</dd>
           </div>
           {going > 0 && (
             <div className="flex gap-2">
-              <dt className="sr-only">Going</dt>
+              <dt className="sr-only">{t.card.going}</dt>
               <span aria-hidden="true">👥</span>
-              <dd>{going} going</dd>
+              <dd>{t.card.goingCount(going)}</dd>
             </div>
           )}
         </dl>
@@ -144,7 +159,7 @@ export default function EventCard({
         <div className="flex flex-wrap items-center gap-2">
           <span
             className={
-              price === "Free"
+              event.price_cents === 0
                 ? "rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700"
                 : "rounded-full bg-neutral-100 px-2.5 py-1 text-xs font-semibold text-neutral-800"
             }
@@ -152,7 +167,7 @@ export default function EventCard({
             {price}
           </span>
           <span className="rounded-full bg-brand/10 px-2.5 py-1 text-xs font-semibold capitalize text-brand">
-            {event.category}
+            {t.categoryNames[event.category] ?? event.category}
           </span>
         </div>
 
@@ -163,7 +178,7 @@ export default function EventCard({
             rel="noopener noreferrer"
             className="mt-1 flex min-h-11 items-center justify-center rounded-xl bg-brand px-4 text-base font-semibold text-white active:opacity-80"
           >
-            {price === "Free" ? "Sign up" : "Get tickets"}
+            {event.price_cents === 0 ? t.card.signUp : t.card.tickets}
           </a>
         )}
 
@@ -172,7 +187,7 @@ export default function EventCard({
           href={`/events/${event.id}`}
           className="mt-1 flex min-h-11 items-center justify-center rounded-xl border border-brand/30 px-4 text-base font-semibold text-brand active:bg-brand/5"
         >
-          More info
+          {t.card.moreInfo}
         </Link>
       </div>
     </article>

@@ -3,6 +3,8 @@ import { toggleRsvp } from "@/app/account/actions";
 import RsvpButton from "@/components/RsvpButton";
 import { getRsvpCounts } from "@/lib/rsvps";
 import { getCurrentUser, supabaseForUser } from "@/lib/server/auth";
+import { getLocale } from "@/lib/server/locale";
+import { messages } from "@/lib/i18n";
 
 // "I'm going" button + how many people are going, on an event's page.
 export default async function RsvpPanel({
@@ -12,10 +14,12 @@ export default async function RsvpPanel({
   eventId: string;
   ended: boolean;
 }) {
-  const [user, counts] = await Promise.all([
+  const [user, counts, locale] = await Promise.all([
     getCurrentUser(),
     getRsvpCounts([eventId]),
+    getLocale(),
   ]);
+  const t = messages(locale).rsvp;
   const count = counts.get(eventId) ?? 0;
 
   let going = false;
@@ -31,17 +35,13 @@ export default async function RsvpPanel({
   }
 
   const countText =
-    count === 0
-      ? ended
-        ? null
-        : "Be the first to RSVP"
-      : `${count} ${count === 1 ? "person" : "people"} ${ended ? "went" : "going"}`;
+    count === 0 ? (ended ? null : t.beFirst) : t.people(count, ended);
 
   if (ended) {
     return countText ? (
       <p className="text-sm text-neutral-600">
         👥 {countText}
-        {going ? " (including you)" : ""}
+        {going ? t.includingYou : ""}
       </p>
     ) : null;
   }
@@ -51,14 +51,14 @@ export default async function RsvpPanel({
       {user ? (
         <form action={toggleRsvp}>
           <input type="hidden" name="event_id" value={eventId} />
-          <RsvpButton going={going} />
+          <RsvpButton going={going} locale={locale} />
         </form>
       ) : (
         <Link
           href={`/login?next=${encodeURIComponent(`/events/${eventId}`)}`}
           className="flex min-h-12 items-center justify-center rounded-xl bg-brand px-4 text-base font-semibold text-white active:opacity-80"
         >
-          I&apos;m going
+          {t.imGoing}
         </Link>
       )}
       <p className="text-center text-sm text-neutral-600">
@@ -69,11 +69,9 @@ export default async function RsvpPanel({
             {countText}
           </>
         )}
-        {!user && <> · Log in to RSVP</>}
+        {!user && <> · {t.logInToRsvp}</>}
       </p>
-      <p className="text-center text-xs text-neutral-500">
-        The club hosting this event can see the names of people going.
-      </p>
+      <p className="text-center text-xs text-neutral-500">{t.clubCanSee}</p>
     </div>
   );
 }

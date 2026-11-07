@@ -5,6 +5,8 @@ import { Suspense } from "react";
 import { LoginForm } from "@/components/AuthForms";
 import EventPageShell from "@/components/EventPageShell";
 import { getCurrentUser, safeNext, schoolForVisitor } from "@/lib/server/auth";
+import { messages } from "@/lib/i18n";
+import { getLocale } from "@/lib/server/locale";
 import { SITE } from "@/lib/site";
 
 export const metadata: Metadata = { title: `Log in · ${SITE.name}` };
@@ -14,7 +16,7 @@ export default function LoginPage(props: PageProps<"/login">) {
     <Suspense
       fallback={
         <EventPageShell>
-          <div className="h-72 animate-pulse rounded-2xl bg-white" />
+          <div className="h-72 animate-pulse rounded-2xl bg-card" />
         </EventPageShell>
       }
     >
@@ -27,27 +29,29 @@ async function LoginContent({ searchParams }: PageProps<"/login">) {
   const query = await searchParams;
   const next = safeNext(query.next as string | undefined);
   if (await getCurrentUser()) redirect(next ?? "/account");
-  const school = await schoolForVisitor(next);
+  const [school, locale] = await Promise.all([
+    schoolForVisitor(next),
+    getLocale(),
+  ]);
+  const t = messages(locale).auth;
   return (
-    <EventPageShell school={school}>
-      <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-black/5">
-        <h1 className="text-2xl font-bold">Log in</h1>
-        <p className="mt-1 mb-5 text-neutral-600">
-          RSVP to events and keep track of what you&apos;re going to.
-        </p>
+    <EventPageShell school={school} locale={locale}>
+      <div className="rounded-2xl bg-card p-5 shadow-sm ring-1 ring-black/5">
+        <h1 className="text-2xl font-bold">{t.loginTitle}</h1>
+        <p className="mt-1 mb-5 text-neutral-600">{t.loginIntro}</p>
         {query.error === "link" && (
           <p
             role="alert"
             className="mb-4 rounded-xl bg-amber-50 px-4 py-3 text-sm text-amber-900"
           >
-            That email link has expired or was already used. Log in, or{" "}
+            {t.linkExpired}{" "}
             <Link href="/forgot-password" className="font-semibold underline">
-              get a new link
+              {t.getNewLink}
             </Link>
             .
           </p>
         )}
-        <LoginForm next={next} />
+        <LoginForm next={next} locale={locale} />
       </div>
     </EventPageShell>
   );

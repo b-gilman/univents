@@ -1,18 +1,20 @@
 import Link from "next/link";
 import { type Filters, filtersHref, hasFilters } from "@/lib/event-list";
+import { type Locale, campusName, messages } from "@/lib/i18n";
 import { CATEGORIES } from "@/lib/submission-rules";
 
 // Category buttons, in the order students most often look for them.
-export const CATEGORY_LABELS: Record<(typeof CATEGORIES)[number], string> = {
-  party: "🎉 Party",
-  social: "👋 Social",
-  sports: "⚽ Sports",
-  arts: "🎨 Arts",
-  cultural: "🌏 Cultural",
-  academic: "📚 Academic",
-  career: "💼 Career",
-  other: "✨ Other",
-};
+// (Their names, with emoji, are in src/lib/i18n.ts.)
+export const CATEGORY_ORDER: (typeof CATEGORIES)[number][] = [
+  "party",
+  "social",
+  "sports",
+  "arts",
+  "cultural",
+  "academic",
+  "career",
+  "other",
+];
 
 // Two rows of filter buttons. Each button is a link to the same page with that
 // filter switched on or off, so it works without any JavaScript.
@@ -21,11 +23,14 @@ export default function FilterBar({
   filters,
   campuses,
   basePath,
+  locale,
 }: {
   filters: Filters;
   campuses: string[];
   basePath: string;
+  locale: Locale;
 }) {
+  const t = messages(locale);
   const toggle = (key: "when", value: "today" | "week") => ({
     ...filters,
     [key]: filters[key] === value ? undefined : value,
@@ -33,22 +38,22 @@ export default function FilterBar({
 
   const main: Chip[] = [
     {
-      label: "Today",
+      label: t.filters.today,
       active: filters.when === "today",
       next: toggle("when", "today"),
     },
     {
-      label: "This week",
+      label: t.filters.thisWeek,
       active: filters.when === "week",
       next: toggle("when", "week"),
     },
     {
-      label: "Free",
+      label: t.filters.free,
       active: Boolean(filters.free),
       next: { ...filters, free: filters.free ? undefined : true },
     },
     ...campuses.map((campus) => ({
-      label: campus,
+      label: campusName(campus, locale),
       active: filters.campus === campus,
       next: {
         ...filters,
@@ -57,29 +62,27 @@ export default function FilterBar({
     })),
   ];
 
-  const categories: Chip[] = (
-    Object.keys(CATEGORY_LABELS) as (typeof CATEGORIES)[number][]
-  ).map((c) => ({
-    label: CATEGORY_LABELS[c],
+  const categories: Chip[] = CATEGORY_ORDER.map((c) => ({
+    label: t.categories[c],
     active: filters.category === c,
     next: { ...filters, category: filters.category === c ? undefined : c },
   }));
 
   return (
     <div className="flex flex-col gap-2">
-      <ChipRow label="Filter events" chips={main} basePath={basePath}>
+      <ChipRow label={t.filters.label} chips={main} basePath={basePath}>
         {hasFilters({ ...filters, q: undefined }) && (
           <Link
             href={filtersHref({ q: filters.q }, basePath)}
             scroll={false}
             className="flex min-h-10 shrink-0 items-center px-3 text-sm font-semibold text-brand underline-offset-2 active:underline"
           >
-            Clear
+            {t.filters.clear}
           </Link>
         )}
       </ChipRow>
       <ChipRow
-        label="Categories"
+        label={t.filters.categoriesLabel}
         chips={categories}
         basePath={basePath}
         small
@@ -119,7 +122,7 @@ function ChipRow({
             (small ? "min-h-9 px-3 text-[13px] " : "min-h-10 px-4 text-sm ") +
             (chip.active
               ? "bg-brand text-white ring-brand"
-              : "bg-white text-neutral-800 ring-black/10 active:bg-neutral-100")
+              : "bg-card text-neutral-800 ring-black/10 active:bg-neutral-100")
           }
         >
           {chip.label}

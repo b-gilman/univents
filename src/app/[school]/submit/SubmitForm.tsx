@@ -94,7 +94,7 @@ export default function SubmitForm({
         <input type="hidden" name="org_id" value={organisation.id} />
       )}
       {organisation && (
-        <p className="rounded-xl bg-white px-4 py-3 text-sm text-neutral-700 ring-1 ring-black/5">
+        <p className="rounded-xl bg-card px-4 py-3 text-sm text-neutral-700 ring-1 ring-black/5">
           Posting as <strong>{organisation.name}</strong>.{" "}
           {organisation.verified
             ? "Your club is verified, so the event goes live right away."
@@ -241,7 +241,7 @@ export default function SubmitForm({
                 {WEEKDAYS.map((d) => (
                   <label
                     key={d.value}
-                    className="flex min-h-10 cursor-pointer items-center rounded-full bg-white px-3 text-sm ring-1 ring-black/10 has-[:checked]:bg-brand has-[:checked]:text-white has-[:checked]:ring-brand"
+                    className="flex min-h-10 cursor-pointer items-center rounded-full bg-card px-3 text-sm ring-1 ring-black/10 has-[:checked]:bg-brand has-[:checked]:text-white has-[:checked]:ring-brand"
                   >
                     <input
                       type="checkbox"
@@ -316,7 +316,7 @@ export default function SubmitForm({
             ].map((o) => (
               <label
                 key={o.value}
-                className="flex min-h-11 cursor-pointer items-center justify-center rounded-xl bg-white px-2 text-center text-sm font-medium ring-1 ring-black/10 has-[:checked]:bg-brand has-[:checked]:text-white has-[:checked]:ring-brand"
+                className="flex min-h-11 cursor-pointer items-center justify-center rounded-xl bg-card px-2 text-center text-sm font-medium ring-1 ring-black/10 has-[:checked]:bg-brand has-[:checked]:text-white has-[:checked]:ring-brand"
               >
                 <input
                   type="radio"
@@ -433,11 +433,11 @@ export default function SubmitForm({
 }
 
 const inputClass =
-  "block min-h-11 w-full rounded-xl border-0 bg-white px-3 py-2 text-base ring-1 ring-black/15 focus:outline-none focus:ring-2 focus:ring-brand";
+  "block min-h-11 w-full rounded-xl border-0 bg-card px-3 py-2 text-base ring-1 ring-black/15 focus:outline-none focus:ring-2 focus:ring-brand";
 
 function Section({ title, children }: { title: string; children: ReactNode }) {
   return (
-    <section className="flex flex-col gap-4 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-black/5">
+    <section className="flex flex-col gap-4 rounded-2xl bg-card p-4 shadow-sm ring-1 ring-black/5">
       <h2 className="font-semibold">{title}</h2>
       {children}
     </section>
@@ -481,7 +481,7 @@ function Success({
   backLabel: string;
 }) {
   return (
-    <div className="rounded-2xl bg-white p-6 text-center shadow-sm ring-1 ring-black/5">
+    <div className="rounded-2xl bg-card p-6 text-center shadow-sm ring-1 ring-black/5">
       <p className="text-3xl" aria-hidden="true">
         🎉
       </p>

@@ -23,7 +23,7 @@ export default function AdminTabs({
           aria-current={current === t.key ? "page" : undefined}
           className={
             "flex min-h-10 items-center justify-center rounded-lg text-sm font-semibold " +
-            (current === t.key ? "bg-white shadow-sm" : "text-neutral-600")
+            (current === t.key ? "bg-card shadow-sm" : "text-neutral-600")
           }
         >
           {t.label}

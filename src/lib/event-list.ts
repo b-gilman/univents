@@ -1,4 +1,5 @@
 import { type EventListItem, TIME_ZONE } from "@/lib/events";
+import { type Locale, dateFormat, messages } from "@/lib/i18n";
 import { CATEGORIES } from "@/lib/submission-rules";
 
 // =============================================================================
@@ -143,7 +144,10 @@ export function groupKey(e: {
   return [e.title, e.organization_name, e.campus, e.location].join("|");
 }
 
-export function groupEvents(events: EventListItem[]): EventGroup[] {
+export function groupEvents(
+  events: EventListItem[],
+  locale: Locale = "en",
+): EventGroup[] {
   // Events arrive sorted by start time, so each group's first item is the
   // next occurrence, and groups end up ordered by their next date.
   const groups = new Map<string, EventListItem[]>();
@@ -157,13 +161,14 @@ export function groupEvents(events: EventListItem[]): EventGroup[] {
   return [...groups].map(([key, list]) => ({
     key,
     next: list[0],
-    repeat: list.length > 1 ? describeRepeat(list) : null,
+    repeat: list.length > 1 ? describeRepeat(list, locale) : null,
   }));
 }
 
 const WEEKDAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
-const weekdayFormat = new Intl.DateTimeFormat("en-US", {
+// Used only to sort weekdays into calendar order.
+const weekdayKey = new Intl.DateTimeFormat("en-US", {
   timeZone: TIME_ZONE,
   weekday: "short",
 });
@@ -172,28 +177,34 @@ const clockFormat = new Intl.DateTimeFormat("en-GB", {
   hour: "2-digit",
   minute: "2-digit",
 });
-const timeRangeFormat = new Intl.DateTimeFormat("en-CA", {
-  timeZone: TIME_ZONE,
-  hour: "numeric",
-  minute: "2-digit",
-});
-const monthDayFormat = new Intl.DateTimeFormat("en-CA", {
-  timeZone: TIME_ZONE,
-  month: "short",
-  day: "numeric",
-});
 
-function describeRepeat(list: EventListItem[]): RepeatInfo {
+function describeRepeat(list: EventListItem[], locale: Locale): RepeatInfo {
   const starts = list.map((e) => new Date(e.starts_at));
+  const weekdayName = dateFormat(locale, {
+    timeZone: TIME_ZONE,
+    weekday: "short",
+  });
+  const time = dateFormat(locale, {
+    timeZone: TIME_ZONE,
+    hour: "numeric",
+    minute: "2-digit",
+  });
 
   // Which weekdays it happens on, in calendar order: "Tue & Fri"
-  const days = [...new Set(starts.map((d) => weekdayFormat.format(d)))].sort(
-    (a, b) => WEEKDAYS.indexOf(a) - WEEKDAYS.indexOf(b),
-  );
+  const firstOfEachDay = new Map<string, Date>();
+  for (const d of starts) {
+    const key = weekdayKey.format(d);
+    if (!firstOfEachDay.has(key)) firstOfEachDay.set(key, d);
+  }
+  const days = [...firstOfEachDay]
+    .sort(([a], [b]) => WEEKDAYS.indexOf(a) - WEEKDAYS.indexOf(b))
+    .map(([, d]) => weekdayName.format(d));
   const dayText =
     days.length === 1
       ? days[0]
-      : `${days.slice(0, -1).join(", ")} & ${days[days.length - 1]}`;
+      : locale === "fr"
+        ? new Intl.ListFormat("fr-CA", { type: "conjunction" }).format(days)
+        : `${days.slice(0, -1).join(", ")} & ${days[days.length - 1]}`;
 
   // At most a week between sessions → "Every …"
   const weekly = starts.every(
@@ -213,12 +224,16 @@ function describeRepeat(list: EventListItem[]): RepeatInfo {
   const timeText = !sameTime
     ? ""
     : first.ends_at
-      ? `, ${timeRangeFormat.formatRange(new Date(first.starts_at), new Date(first.ends_at))}`
-      : `, ${timeRangeFormat.format(new Date(first.starts_at))}`;
+      ? `, ${time.formatRange(new Date(first.starts_at), new Date(first.ends_at))}`
+      : `, ${time.format(new Date(first.starts_at))}`;
 
   return {
-    schedule: `${weekly ? "Every " : ""}${dayText}${timeText}`,
-    until: monthDayFormat.format(starts[starts.length - 1]),
+    schedule: `${weekly ? messages(locale).repeat.every : ""}${dayText}${timeText}`,
+    until: dateFormat(locale, {
+      timeZone: TIME_ZONE,
+      month: "short",
+      day: "numeric",
+    }).format(starts[starts.length - 1]),
     count: list.length,
   };
 }
@@ -243,6 +258,10 @@ export function matchesSearch(e: EventListItem, q: string) {
       e.location,
       e.campus,
       e.category,
+      // Category and campus names in both languages ("carrière", "en ligne").
+      messages("en").categoryNames[e.category],
+      messages("fr").categoryNames[e.category],
+      messages("fr").campuses[e.campus],
     ]
       .filter(Boolean)
       .join(" "),
@@ -263,16 +282,21 @@ const dayKey = new Intl.DateTimeFormat("en-CA", {
   month: "2-digit",
   day: "2-digit",
 });
-const dayLabel = new Intl.DateTimeFormat("en-CA", {
-  timeZone: TIME_ZONE,
-  weekday: "long",
-  month: "long",
-  day: "numeric",
-});
+// `live` = the "Happening now" section (it gets a pulsing dot).
+export type DaySection = { label: string; live: boolean; groups: EventGroup[] };
 
-export type DaySection = { label: string; groups: EventGroup[] };
-
-export function sectionsByDay(groups: EventGroup[], now: Date): DaySection[] {
+export function sectionsByDay(
+  groups: EventGroup[],
+  now: Date,
+  locale: Locale = "en",
+): DaySection[] {
+  const t = messages(locale).days;
+  const dayLabel = dateFormat(locale, {
+    timeZone: TIME_ZONE,
+    weekday: "long",
+    month: "long",
+    day: "numeric",
+  });
   const today = dayKey.format(now);
   const tomorrow = dayKey.format(new Date(now.getTime() + 864e5));
   const sections: DaySection[] = [];
@@ -281,15 +305,15 @@ export function sectionsByDay(groups: EventGroup[], now: Date): DaySection[] {
     const key = start <= now ? "now" : dayKey.format(start);
     const label =
       key === "now"
-        ? "Happening now"
+        ? t.now
         : key === today
-          ? "Today"
+          ? t.today
           : key === tomorrow
-            ? "Tomorrow"
+            ? t.tomorrow
             : dayLabel.format(start);
     const last = sections[sections.length - 1];
     if (last && last.label === label) last.groups.push(g);
-    else sections.push({ label, groups: [g] });
+    else sections.push({ label, live: key === "now", groups: [g] });
   }
   return sections;
 }
@@ -302,24 +326,29 @@ export type Badge = { label: string; tone: "live" | "soon" | "popular" };
 
 export const POPULAR_AT = 5; // RSVPs needed for the "Popular" badge
 
-export function badgesFor(e: EventListItem, going: number, now: Date): Badge[] {
+export function badgesFor(
+  e: EventListItem,
+  going: number,
+  now: Date,
+  locale: Locale = "en",
+): Badge[] {
+  const label = messages(locale).badges;
   const badges: Badge[] = [];
   const start = Date.parse(e.starts_at);
   const end = e.ends_at ? Date.parse(e.ends_at) : start + 4 * 3600e3;
   const t = now.getTime();
-  if (start <= t && t < end)
-    badges.push({ label: "Happening now", tone: "live" });
+  if (start <= t && t < end) badges.push({ label: label.live, tone: "live" });
   else if (start > t && start - t <= 3 * 3600e3) {
     const mins = Math.max(1, Math.round((start - t) / 60000));
     badges.push({
       label:
         mins < 60
-          ? `Starts in ${mins} min`
-          : `Starts in ${Math.round(mins / 60)} h`,
+          ? label.startsMin(mins)
+          : label.startsHours(Math.round(mins / 60)),
       tone: "soon",
     });
   }
   if (going >= POPULAR_AT)
-    badges.push({ label: "🔥 Popular", tone: "popular" });
+    badges.push({ label: label.popular, tone: "popular" });
   return badges;
 }

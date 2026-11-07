@@ -17,6 +17,7 @@ import {
   groupFilter,
   loadGroup,
 } from "@/lib/server/admin-data";
+import { saveClubProfile } from "@/lib/server/club-profile";
 import { parseEventFields, parseOccurrences } from "@/lib/server/submissions";
 import { supabaseAdmin } from "@/lib/server/supabase-admin";
 import { allCampuses, getSchool } from "@/lib/schools";
@@ -206,6 +207,19 @@ export async function setVerified(fd: FormData) {
     .eq("id", orgId);
   if (error) throw error;
   revalidatePath(ORG_PAGE);
+}
+
+// Edit a club's public page (description, logo, Instagram, website).
+export async function adminUpdateClubProfile(fd: FormData) {
+  await assertAdmin();
+  const orgId = orgIdFrom(fd);
+  const result = await saveClubProfile(orgId, fd);
+  revalidatePath(`/clubs/${orgId}`);
+  redirect(
+    result.ok
+      ? `${ORG_PAGE}?msg=${encodeURIComponent("Club page saved.")}#org-${orgId}`
+      : `${ORG_PAGE}?error=${encodeURIComponent(result.error)}#org-${orgId}`,
+  );
 }
 
 // ------------------------------------------------------------ live events

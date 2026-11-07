@@ -17,12 +17,16 @@ export function adminPasswordConfigured() {
 // Secret used to sign the cookie. Changing ADMIN_PASSWORD logs everyone out.
 function signingKey() {
   return createHash("sha256")
-    .update(`${process.env.ADMIN_PASSWORD}|${process.env.SUPABASE_SECRET_KEY ?? ""}`)
+    .update(
+      `${process.env.ADMIN_PASSWORD}|${process.env.SUPABASE_SECRET_KEY ?? ""}`,
+    )
     .digest();
 }
 
 function sign(expiresAt: number) {
-  const mac = createHmac("sha256", signingKey()).update(String(expiresAt)).digest("hex");
+  const mac = createHmac("sha256", signingKey())
+    .update(String(expiresAt))
+    .digest("hex");
   return `${expiresAt}.${mac}`;
 }
 
@@ -60,7 +64,8 @@ export async function isAdmin(): Promise<boolean> {
   if (!value) return false;
   const [expires] = value.split(".");
   const expiresAt = Number(expires);
-  if (!Number.isFinite(expiresAt) || expiresAt < Date.now() / 1000) return false;
+  if (!Number.isFinite(expiresAt) || expiresAt < Date.now() / 1000)
+    return false;
   return sameText(value, sign(expiresAt));
 }
 

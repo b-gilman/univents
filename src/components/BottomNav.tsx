@@ -6,51 +6,69 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Suspense, type ReactNode } from "react";
+import { type Locale, messages } from "@/lib/i18n";
+
+type Props = {
+  schoolId: string | null;
+  // The language. Missing only on the split-second loading screen, where the
+  // bar shows its icons without words (so it never flashes the wrong language).
+  locale?: Locale;
+};
 
 // The current page address is only known in the browser, so the highlight is
 // filled in there; the pre-built page shows the bar without a highlight.
-export default function BottomNav({ schoolId }: { schoolId: string | null }) {
+export default function BottomNav(props: Props) {
   return (
-    <Suspense fallback={<Bar schoolId={schoolId} path="" />}>
-      <WithPath schoolId={schoolId} />
+    <Suspense fallback={<Bar {...props} path="" />}>
+      <WithPath {...props} />
     </Suspense>
   );
 }
 
-function WithPath({ schoolId }: { schoolId: string | null }) {
-  return <Bar schoolId={schoolId} path={usePathname()} />;
+function WithPath(props: Props) {
+  return <Bar {...props} path={usePathname()} />;
 }
 
-function Bar({ schoolId, path }: { schoolId: string | null; path: string }) {
+function Bar({ schoolId, locale, path }: Props & { path: string }) {
+  const t = locale ? messages(locale).nav : null;
   const base = schoolId ? `/${schoolId}` : "/";
   const items: {
-    label: string;
+    key: string;
+    label: string | undefined;
     href: string;
     active: boolean;
     icon: ReactNode;
   }[] = [
     {
-      label: "Events",
+      key: "events",
+      label: t?.events,
       href: base,
-      active: path === base || path.startsWith("/events/"),
+      active:
+        path === base ||
+        path.startsWith("/events/") ||
+        path.startsWith("/clubs/") ||
+        path.endsWith("/clubs"),
       icon: (
         <path d="M4 7a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2zM4 10h16M9 3v4M15 3v4" />
       ),
     },
     {
-      label: "Search",
+      key: "search",
+      label: t?.search,
       href: schoolId ? `${base}/search` : "/",
       active: path.endsWith("/search"),
       icon: <path d="M11 18a7 7 0 1 0 0-14 7 7 0 0 0 0 14zM20 20l-4-4" />,
     },
     {
-      label: "Post",
+      key: "post",
+      label: t?.post,
       href: schoolId ? `${base}/submit` : "/",
       active: path.endsWith("/submit") || path.startsWith("/organize"),
       icon: <path d="M12 5v14M5 12h14" />,
     },
     {
-      label: "My events",
+      key: "account",
+      label: t?.myEvents,
       href: "/account",
       active: path.startsWith("/account"),
       icon: (
@@ -61,12 +79,12 @@ function Bar({ schoolId, path }: { schoolId: string | null; path: string }) {
 
   return (
     <nav
-      aria-label="Main"
-      className="fixed inset-x-0 bottom-0 z-30 border-t border-black/10 bg-white/95 pb-[env(safe-area-inset-bottom)] backdrop-blur sm:hidden"
+      aria-label={t?.main ?? "Main"}
+      className="fixed inset-x-0 bottom-0 z-30 border-t border-black/10 bg-card/95 pb-[env(safe-area-inset-bottom)] backdrop-blur sm:hidden"
     >
       <ul className="mx-auto grid max-w-xl grid-cols-4">
         {items.map((item) => (
-          <li key={item.label}>
+          <li key={item.key}>
             <Link
               href={item.href}
               aria-current={item.active ? "page" : undefined}
@@ -89,7 +107,9 @@ function Bar({ schoolId, path }: { schoolId: string | null; path: string }) {
               >
                 {item.icon}
               </svg>
-              {item.label}
+              <span className="max-w-full truncate px-1">
+                {item.label ?? "\u00a0"}
+              </span>
             </Link>
           </li>
         ))}

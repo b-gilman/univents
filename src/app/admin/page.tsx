@@ -76,7 +76,7 @@ async function PendingList() {
         <form action={clearExpiredSubmissions} className="mb-4">
           <button
             type="submit"
-            className="flex min-h-11 w-full items-center justify-center rounded-xl bg-white px-4 text-sm font-semibold text-neutral-700 ring-1 ring-black/10 active:bg-neutral-50"
+            className="flex min-h-11 w-full items-center justify-center rounded-xl bg-card px-4 text-sm font-semibold text-neutral-700 ring-1 ring-black/10 active:bg-neutral-50"
           >
             Clear {expiredCount} expired{" "}
             {expiredCount === 1 ? "submission" : "submissions"} (dates already
@@ -85,7 +85,7 @@ async function PendingList() {
         </form>
       )}
       {groups.length === 0 ? (
-        <p className="rounded-2xl bg-white p-6 text-center text-neutral-600 shadow-sm ring-1 ring-black/5">
+        <p className="rounded-2xl bg-card p-6 text-center text-neutral-600 shadow-sm ring-1 ring-black/5">
           Nothing to review right now 🎉
         </p>
       ) : (
@@ -114,7 +114,7 @@ function PendingCard({
   const e = group.events[0];
   const sub = group.submission;
   return (
-    <article className="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-black/5">
+    <article className="overflow-hidden rounded-2xl bg-card shadow-sm ring-1 ring-black/5">
       {e.image_url && (
         <Image
           src={e.image_url}

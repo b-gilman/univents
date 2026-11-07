@@ -32,6 +32,8 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="en"
+      // The script below may switch lang to "fr" before React loads.
+      suppressHydrationWarning
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       {/* "Install as an app" tags. Written here (not in `metadata`) so they're
@@ -39,6 +41,14 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           their metadata later, and iPhones look for these when you tap
           "Add to Home Screen". */}
       <head>
+        {/* The page's language for screen readers, translation tools and
+            hyphenation: the saved FR / EN choice, otherwise the phone's
+            language. Done here because this outer frame is pre-built. */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `try{var m=document.cookie.match(/(?:^|; )lang=(en|fr)/);document.documentElement.lang=m?m[1]:/^fr\\b/i.test(navigator.language)?"fr":"en"}catch(e){}`,
+          }}
+        />
         <link rel="manifest" href="/manifest.webmanifest" />
         <link rel="apple-touch-icon" href="/apple-icon.png" />
         <meta name="mobile-web-app-capable" content="yes" />
