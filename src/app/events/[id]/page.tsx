@@ -99,16 +99,14 @@ async function EventDetails({
     : [];
 
   // Directions open Google Maps (or Apple Maps on iPhone via the web link).
-  // Online events have no place to go to.
+  // Online events have no place to go to. Off-campus addresses are searched
+  // as written; campus rooms get the campus and school added.
+  const offCampus = e.campus === "Off-campus";
   const mapsHref =
-    e.campus === "Online"
+    e.campus === "Online" || (offCampus && !e.location)
       ? null
       : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
-          [
-            e.location,
-            e.campus === "Off-campus" ? null : e.campus,
-            school?.name,
-          ]
+          (offCampus ? [e.location] : [e.location, e.campus, school?.name])
             .filter(Boolean)
             .join(", "),
         )}`;
