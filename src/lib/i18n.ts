@@ -207,7 +207,7 @@ const en = {
     organiser: "Organiser dashboard",
     reminders: "Reminder emails",
     remindersOn:
-      "We'll email you the day before events you're going to, and when clubs you follow post new events.",
+      "We'll email you the day before events you're going to, and when clubs you follow post new events or updates.",
     remindersOff: "Off. You won't get reminder emails.",
     loggedInAs: (email: string) => `Logged in as ${email}`,
     logOut: "Log out",
@@ -496,7 +496,7 @@ const fr: Messages = {
     organiser: "Tableau de bord des organisateurs",
     reminders: "Courriels de rappel",
     remindersOn:
-      "On t'écrit la veille des événements où tu vas, et quand les clubs que tu suis publient de nouveaux événements.",
+      "On t'écrit la veille des événements où tu vas, et quand les clubs que tu suis publient de nouveaux événements ou des nouvelles.",
     remindersOff: "Désactivés. Tu ne recevras pas de courriels de rappel.",
     loggedInAs: (email: string) => `Connecté avec ${email}`,
     logOut: "Se déconnecter",

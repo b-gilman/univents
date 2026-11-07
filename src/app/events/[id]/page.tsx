@@ -7,6 +7,7 @@ import { Suspense } from "react";
 import EventPageShell from "@/components/EventPageShell";
 import RsvpPanel from "@/components/RsvpPanel";
 import ShareButton from "@/components/ShareButton";
+import ViewPing from "@/components/ViewPing";
 import { groupKey } from "@/lib/event-list";
 import { type Locale, messages } from "@/lib/i18n";
 import { getSchool } from "@/lib/schools";
@@ -114,6 +115,7 @@ async function EventDetails({
 
   return (
     <EventPageShell school={school} locale={locale}>
+      <ViewPing eventId={e.id} />
       <article className="overflow-hidden rounded-2xl bg-card shadow-sm ring-1 ring-black/5">
         {e.image_url && (
           <Image

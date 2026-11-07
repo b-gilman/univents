@@ -25,21 +25,27 @@ const initial: SubmitState = { status: "idle" };
 //  - public form (/school/submit): anyone, goes to the admin for review
 //  - organiser form: a club's organiser posting for their club (`organisation`
 //    set, `action` = the organiser action). Verified clubs publish instantly.
+//    `initial` pre-fills it when duplicating an event, and `copyPosterUrl`
+//    offers to reuse that event's poster.
 export default function SubmitForm({
   schoolId,
   campuses,
   action: serverAction = submitEvent,
   organisation,
+  initial: prefill,
+  copyPosterUrl = null,
 }: {
   schoolId: string;
   campuses: string[];
   action?: (prev: SubmitState, fd: FormData) => Promise<SubmitState>;
   organisation?: { id: string; name: string; verified: boolean };
+  initial?: Record<string, string>;
+  copyPosterUrl?: string | null;
 }) {
   const [state, dispatch, pending] = useActionState(serverAction, initial);
   const [preparing, setPreparing] = useState(false);
 
-  const values = state.status === "error" ? state.values : {};
+  const values = state.status === "error" ? state.values : (prefill ?? {});
   const errors = state.status === "error" ? state.errors : {};
   const v = (key: string) =>
     typeof values[key] === "string" ? (values[key] as string) : "";
@@ -378,8 +384,31 @@ export default function SubmitForm({
       </Section>
 
       <Section title="Poster (optional)">
+        {copyPosterUrl && (
+          <label className="flex items-center gap-3 rounded-xl bg-neutral-50 p-3 text-sm ring-1 ring-black/5">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={copyPosterUrl}
+              alt=""
+              className="h-16 w-16 shrink-0 rounded-lg object-cover"
+            />
+            <input
+              type="checkbox"
+              name="copy_image_url"
+              value={copyPosterUrl}
+              defaultChecked
+              className="h-5 w-5 shrink-0 accent-brand"
+            />
+            <span>
+              Use the same poster
+              <span className="block text-xs text-neutral-500">
+                Or upload a new one below.
+              </span>
+            </span>
+          </label>
+        )}
         <Field
-          label="Upload your poster"
+          label={copyPosterUrl ? "Upload a new poster" : "Upload your poster"}
           hint="JPG, PNG or WebP. Big photos are shrunk automatically."
           error={errors.poster}
         >

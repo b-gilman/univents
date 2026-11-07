@@ -5,7 +5,7 @@ import { notFound, redirect } from "next/navigation";
 import { Suspense, type ReactNode } from "react";
 import ConfirmButton from "@/app/admin/ConfirmButton";
 import EventPageShell from "@/components/EventPageShell";
-import { TIME_ZONE, formatEventTime } from "@/lib/events";
+import { TIME_ZONE, formatEventTime, hasEnded } from "@/lib/events";
 import { allCampuses, getSchool } from "@/lib/schools";
 import { getCurrentUser } from "@/lib/server/auth";
 import { attendees, organiserOf, orgEvents } from "@/lib/server/organisers";
@@ -70,6 +70,15 @@ async function Content({
   const seriesCount = e.submission_id
     ? events.filter((x) => x.submission_id === e.submission_id).length
     : 1;
+  // Dates that "Change all upcoming dates" would update (this one included).
+  const now = new Date();
+  const upcomingInSeries = e.submission_id
+    ? events.filter(
+        (x) =>
+          x.submission_id === e.submission_id &&
+          (x.id === e.id || !hasEnded(x, now)),
+      ).length
+    : 1;
   const priceType =
     e.price_cents === null ? "unknown" : e.price_cents === 0 ? "free" : "paid";
   const hidden = (
@@ -100,18 +109,25 @@ async function Content({
           <p className="text-neutral-600">
             {formatEventTime(e.starts_at, e.ends_at)}
           </p>
-          {e.status === "published" && (
+          <div className="mt-2 flex flex-wrap gap-2">
+            {e.status === "published" && (
+              <Link href={`/events/${e.id}`} className={SMALL_BUTTON}>
+                View public page
+              </Link>
+            )}
             <Link
-              href={`/events/${e.id}`}
-              className="text-sm font-semibold text-brand underline"
+              href={`/organize/${org.id}/new?from=${e.id}`}
+              className={SMALL_BUTTON}
             >
-              View public page
+              <span aria-hidden="true">⧉</span> Duplicate
             </Link>
-          )}
+          </div>
         </div>
-        {query.saved === "1" && (
+        {typeof query.saved === "string" && (
           <p className="rounded-xl bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-800">
-            Changes saved.
+            {Number(query.saved) > 1
+              ? `Changes saved to ${query.saved} dates.`
+              : "Changes saved."}
           </p>
         )}
         {typeof query.error === "string" && (
@@ -144,7 +160,7 @@ async function Content({
           className="flex flex-col gap-4 rounded-2xl bg-card p-4 shadow-sm ring-1 ring-black/5"
         >
           {hidden}
-          <h2 className="font-semibold">Edit this date</h2>
+          <h2 className="font-semibold">Edit</h2>
           {!org.verified && (
             <p className="-mt-2 text-sm text-neutral-600">
               Saving sends it back for a quick admin review.
@@ -292,18 +308,41 @@ async function Content({
               Remove the poster
             </label>
           )}
+          {upcomingInSeries > 1 ? (
+            <fieldset className="flex flex-col gap-1 rounded-xl bg-neutral-50 p-3 ring-1 ring-black/5">
+              <legend className="sr-only">Which dates to change</legend>
+              <p className="mb-1 text-sm font-medium">
+                This is one of {seriesCount} dates. Save changes to:
+              </p>
+              <label className="flex min-h-11 items-center gap-2 text-sm">
+                <input
+                  type="radio"
+                  name="scope"
+                  value="one"
+                  defaultChecked
+                  className="h-5 w-5 accent-brand"
+                />
+                This date only
+              </label>
+              <label className="flex min-h-11 items-center gap-2 text-sm">
+                <input
+                  type="radio"
+                  name="scope"
+                  value="series"
+                  className="h-5 w-5 accent-brand"
+                />
+                All {upcomingInSeries} upcoming dates (each keeps its own day)
+              </label>
+            </fieldset>
+          ) : (
+            <input type="hidden" name="scope" value="one" />
+          )}
           <button
             type="submit"
             className="min-h-12 rounded-xl bg-brand px-4 font-semibold text-white active:opacity-80"
           >
             Save changes
           </button>
-          {seriesCount > 1 && (
-            <p className="-mt-2 text-center text-xs text-neutral-500">
-              This is one of {seriesCount} dates; changes apply to this date
-              only.
-            </p>
-          )}
         </form>
 
         {/* Delete */}
@@ -336,6 +375,9 @@ async function Content({
     </EventPageShell>
   );
 }
+
+const SMALL_BUTTON =
+  "inline-flex min-h-10 items-center gap-1.5 rounded-full bg-neutral-100 px-4 text-sm font-semibold text-neutral-800 active:bg-neutral-200";
 
 const input =
   "block min-h-11 w-full rounded-xl border-0 bg-card px-3 py-2 text-base ring-1 ring-black/15 focus:outline-none focus:ring-2 focus:ring-brand";

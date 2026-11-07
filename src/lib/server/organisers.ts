@@ -91,3 +91,25 @@ export async function attendees(eventId: string) {
   if (error) console.error("Loading attendees failed:", error.message);
   return (data ?? []) as { full_name: string; rsvped_at: string }[];
 }
+
+// Page views of a club's events: { total, last7 } per event id. Empty if the
+// stats update hasn't been run in Supabase yet.
+export async function clubEventViews(orgId: string) {
+  const supabase = await supabaseForUser();
+  const { data, error } = await supabase.rpc("club_event_views", {
+    org: orgId,
+  });
+  if (error) console.error("Loading event views failed:", error.message);
+  const views = new Map<string, { total: number; last7: number }>();
+  for (const row of (data ?? []) as {
+    event_id: string;
+    views_total: number;
+    views_7d: number | null;
+  }[]) {
+    views.set(row.event_id, {
+      total: Number(row.views_total) || 0,
+      last7: Number(row.views_7d) || 0,
+    });
+  }
+  return views;
+}

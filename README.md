@@ -112,6 +112,16 @@ live instantly, others go to the admin review queue), edit/delete their club's
 events, and see the names of students who RSVP'd (never emails). Enforced by
 row-level security; see `supabase/migrations/20261111000000_organisers.sql`.
 
+### Organiser tools
+
+Stats and messages need `supabase/migrations/20261114000000_stats_and_messages.sql` (run once).
+
+- **Repeat events:** "Repeats every week" on the New event form (pick weekdays and a last date).
+- **Duplicate:** on an event's manage page. Opens the New event form filled in (except the date), with the option to reuse the poster.
+- **Edit a series:** when editing a repeating event, choose "This date only" or "All upcoming dates". Changing all dates applies the new details and times, and each date keeps its own day.
+- **Stats:** the dashboard shows followers, event page views in the last 7 days, and how many are going to upcoming events. Each event shows its views. Views are counted by the page itself (`/api/events/<id>/view`), once per browser visit. Bots and link previews aren't counted, and only a number per day is stored, nothing about who.
+- **Message followers:** a title and a short message, emailed to the club's followers who have emails on (sent in batches through Resend). One per club per 24 hours; recent messages are listed. Followers' addresses never leave the server.
+
 ## Event submissions and admin
 
 - **`/<school>/submit`**: public form where clubs send in events (with poster upload).

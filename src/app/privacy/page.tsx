@@ -60,6 +60,10 @@ export default function PrivacyPage() {
               cookies so the site opens on your school, in your language.
             </li>
             <li>
+              <strong>Page view counts</strong>: how many times each event page
+              is opened, as one number per day. Nothing about who opened it.
+            </li>
+            <li>
               <strong>Club pages</strong>: the logo, description and links a
               club&apos;s organisers add. These are public.
             </li>
@@ -72,10 +76,11 @@ export default function PrivacyPage() {
         </Section>
 
         <Section title="Why">
-          To show events, let you RSVP and follow clubs, email you reminders and
-          new events from clubs you follow (you can turn these off), let clubs
-          know who&apos;s coming, review submitted events, and keep the site
-          free of spam.
+          To show events, let you RSVP and follow clubs, email you reminders,
+          new events and short updates from clubs you follow (you can turn these
+          off), show clubs how many people view their events, let clubs know
+          who&apos;s coming, review submitted events, and keep the site free of
+          spam.
         </Section>
 
         <Section title="Who can see what">

@@ -46,6 +46,42 @@ export async function sendEmail(message: {
   }
 }
 
+// Sends many emails, up to 100 per request (Resend's batch limit), so a
+// message to a club's followers goes out quickly. Returns how many were sent.
+export async function sendEmailBatch(
+  messages: { to: string; subject: string; html: string; text: string }[],
+): Promise<{ sent: number; error?: string }> {
+  if (!emailConfigured())
+    return {
+      sent: 0,
+      error: "Email isn't set up (RESEND_API_KEY / EMAIL_FROM).",
+    };
+  const base = process.env.RESEND_API_URL ?? "https://api.resend.com";
+  let sent = 0;
+  for (let i = 0; i < messages.length; i += 100) {
+    const chunk = messages.slice(i, i + 100);
+    try {
+      const res = await fetch(`${base}/emails/batch`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${process.env.RESEND_API_KEY}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(
+          chunk.map((m) => ({ from: process.env.EMAIL_FROM, ...m })),
+        ),
+      });
+      if (!res.ok)
+        return { sent, error: `Resend ${res.status}: ${await res.text()}` };
+      sent += chunk.length;
+    } catch (err) {
+      return { sent, error: String(err) };
+    }
+    if (i + 100 < messages.length) await new Promise((r) => setTimeout(r, 600));
+  }
+  return { sent };
+}
+
 // Makes text safe to put inside an email's HTML.
 export function escapeHtml(value: string) {
   return value
