@@ -29,6 +29,8 @@ const en = {
     switchTo: "Français", // the switch shows the OTHER language
     switchShort: "FR",
     switchLabel: "Afficher le site en français",
+    independent:
+      "Kuku is an independent student project, not affiliated with any school.",
   },
   nav: {
     events: "Events",
@@ -214,6 +216,19 @@ const en = {
     noFollows: "Follow clubs to see their upcoming events here.",
     findClubs: "Find clubs",
     language: "Language",
+    yourData: "Your data",
+    downloadData: "Download my data",
+    downloadHint: "A file with everything Kuku has about you.",
+    deleteAccount: "Delete my account",
+    deleteWarning:
+      "This permanently deletes your account, your RSVPs and the clubs you follow. If you organise a club, you'll lose access to its dashboard. It can't be undone.",
+    deleteConfirm: "I understand, delete everything",
+    deleteButton: "Delete my account forever",
+    deleting: "Deleting…",
+    deleteFailed: "Couldn't delete your account. Please try again in a minute.",
+    deletedTitle: "Your account has been deleted",
+    deletedBody:
+      "Your name, email, RSVPs and follows are gone. Thanks for trying Kuku! You can still browse events anytime.",
   },
   auth: {
     loginTitle: "Log in",
@@ -290,6 +305,8 @@ const fr: Messages = {
     switchTo: "English",
     switchShort: "EN",
     switchLabel: "Show the site in English",
+    independent:
+      "Kuku est un projet étudiant indépendant, sans lien officiel avec une école.",
   },
   nav: {
     events: "Événements",
@@ -488,6 +505,20 @@ const fr: Messages = {
     noFollows: "Suis des clubs pour voir leurs prochains événements ici.",
     findClubs: "Trouver des clubs",
     language: "Langue",
+    yourData: "Tes données",
+    downloadData: "Télécharger mes données",
+    downloadHint: "Un fichier avec tout ce que Kuku a sur toi.",
+    deleteAccount: "Supprimer mon compte",
+    deleteWarning:
+      "Ceci supprime pour de bon ton compte, tes réponses aux événements et les clubs que tu suis. Si tu organises un club, tu perdras l'accès à son tableau de bord. C'est irréversible.",
+    deleteConfirm: "Je comprends, tout supprimer",
+    deleteButton: "Supprimer mon compte pour de bon",
+    deleting: "Suppression…",
+    deleteFailed:
+      "Impossible de supprimer ton compte. Réessaie dans une minute.",
+    deletedTitle: "Ton compte a été supprimé",
+    deletedBody:
+      "Ton nom, ton courriel, tes réponses et tes abonnements ont été effacés. Merci d'avoir essayé Kuku! Tu peux toujours consulter les événements.",
   },
   auth: {
     loginTitle: "Connexion",

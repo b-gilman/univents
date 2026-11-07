@@ -78,6 +78,14 @@ Needs `supabase/migrations/20261113000000_clubs_and_follows.sql` (run once).
 
 The site follows the phone's light/dark setting automatically. Instead of a dark version of every element, `src/app/globals.css` swaps the colours themselves when the phone is in dark mode: the greys flip, cards (`bg-card`) turn charcoal, and the green/amber/red labels become dark tints. School colours stay, with brand-coloured text lightened so it's readable. Use `bg-card` (not `bg-white`) for boxes, and `bg-ink` for dark buttons with white text.
 
+## Your data (privacy)
+
+On **My events**, under *Your data*, students can:
+- **Download my data** (`/account/data`): a JSON file with their account, RSVPs, followed clubs, clubs they organise and the cookies on that device.
+- **Delete my account:** behind a warning and an "I understand" checkbox. It deletes the login, and the database then removes the profile, RSVPs, follows and organiser roles automatically. Then `/account/deleted` confirms it.
+
+The privacy page (`/privacy`) explains this in plain language. Set `privacyEmail` in `src/lib/site.ts` to show a contact address there. Every page's footer says Kuku is an independent student project, not affiliated with any school.
+
 ## Student accounts and RSVPs
 
 Students sign up at `/signup` (full name, email, password, school) and log in

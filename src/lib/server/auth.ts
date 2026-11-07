@@ -1,6 +1,7 @@
 import "server-only";
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
+import { connection } from "next/server";
 import { cache } from "react";
 import { getEventById } from "@/lib/events";
 import { SCHOOL_COOKIE, getSchool, getSchools } from "@/lib/schools";
@@ -48,6 +49,9 @@ export type CurrentUser = {
 // Who's logged in (or null). Checked with Supabase's servers, so it can't be
 // faked by editing cookies. `cache` = checked once per page view.
 export const getCurrentUser = cache(async (): Promise<CurrentUser | null> => {
+  // Always check at request time: the login check reads the clock (to see if
+  // the session has expired), which Next.js doesn't allow while pre-building.
+  await connection();
   const supabase = await supabaseForUser();
   const { data, error } = await supabase.auth.getUser();
   if (error || !data.user) return null;

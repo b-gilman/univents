@@ -48,12 +48,20 @@ export default function PrivacyPage() {
               you&apos;re going to.
             </li>
             <li>
+              <strong>Clubs you follow</strong>, and your email settings
+              (reminder emails on or off).
+            </li>
+            <li>
               <strong>Event submissions</strong>: the club name, a contact
               email, the event details and any poster you upload.
             </li>
             <li>
-              <strong>Your school choice</strong>, remembered in a cookie so the
-              site opens on your school.
+              <strong>Your school and language choices</strong>, remembered in
+              cookies so the site opens on your school, in your language.
+            </li>
+            <li>
+              <strong>Club pages</strong>: the logo, description and links a
+              club&apos;s organisers add. These are public.
             </li>
             <li>
               <strong>Spam protection</strong>: when an event is submitted, a
@@ -64,16 +72,18 @@ export default function PrivacyPage() {
         </Section>
 
         <Section title="Why">
-          To show events, let you RSVP and see your events in one place, let
-          clubs know who&apos;s coming, review submitted events, and keep the
-          site free of spam.
+          To show events, let you RSVP and follow clubs, email you reminders and
+          new events from clubs you follow (you can turn these off), let clubs
+          know who&apos;s coming, review submitted events, and keep the site
+          free of spam.
         </Section>
 
         <Section title="Who can see what">
           <ul className="list-disc space-y-1 pl-5">
             <li>
               <strong>Everyone</strong> can see published events and how many
-              people are going, never who.
+              people are going, never who. Clubs show how many followers they
+              have, never who.
             </li>
             <li>
               <strong>The club hosting an event</strong> (its organisers) can
@@ -86,9 +96,10 @@ export default function PrivacyPage() {
             </li>
             <li>
               <strong>Our service providers</strong> store and run the site for
-              us: <strong>Supabase</strong> (database, logins and poster
-              storage) and <strong>Vercel</strong> (hosting). They process data
-              only on our behalf.
+              us: <strong>Supabase</strong> (database, logins and image
+              storage), <strong>Vercel</strong> (hosting) and{" "}
+              <strong>Resend</strong> (sending emails). They process data only
+              on our behalf.
             </li>
           </ul>
         </Section>
@@ -100,22 +111,30 @@ export default function PrivacyPage() {
         </Section>
 
         <Section title="How long we keep it">
-          Your account and RSVPs are kept until you ask us to delete your
-          account. Past events stay listed as history. Submissions that
-          weren&apos;t approved are kept for our records and can be deleted on
-          request.
+          Your account, RSVPs and follows are kept until you delete your
+          account, which erases them right away. Past events stay listed as
+          history. Submissions that weren&apos;t approved are kept for our
+          records and can be deleted on request.
         </Section>
 
         <Section title="Cookies">
           We only use cookies the site needs to work: one to keep you logged in,
-          one to remember your school, and one for the admin&apos;s login. No
-          advertising or tracking cookies.
+          one to remember your school, one for your language, and one for the
+          admin&apos;s login. No advertising or tracking cookies.
         </Section>
 
         <Section title="Your rights">
-          You can ask to see the information we have about you, to correct it,
-          or to delete your account and RSVPs. Contact {contact} from the email
-          on your account and we&apos;ll handle it within 30 days.
+          On your <strong>My events</strong> page you can{" "}
+          <strong>download your data</strong> (everything we have about you) and{" "}
+          <strong>delete your account</strong> yourself, at any time. For
+          anything else, like correcting your information or questions about
+          this page, contact {contact} from the email on your account and
+          we&apos;ll handle it within 30 days.
+        </Section>
+
+        <Section title="Who runs Kuku">
+          {SITE.name} is an independent student project. It isn&apos;t run by,
+          or officially connected to, any school or student union.
         </Section>
 
         <Section title="Changes">

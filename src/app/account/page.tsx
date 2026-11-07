@@ -3,6 +3,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
 import ClubLogo from "@/components/ClubLogo";
+import DeleteAccountForm from "@/components/DeleteAccountForm";
 import EventPageShell from "@/components/EventPageShell";
 import {
   dateBadge,
@@ -265,6 +266,31 @@ async function AccountContent({ searchParams }: PageProps<"/account">) {
             </button>
           </form>
         </div>
+
+        <section className="rounded-2xl bg-card p-4 text-sm shadow-sm ring-1 ring-black/5">
+          <h2 className="font-semibold">{t.account.yourData}</h2>
+          {/* A normal link (not <Link>): it downloads a file. */}
+          <a
+            href="/account/data"
+            download
+            className="mt-2 flex min-h-11 items-center justify-between gap-3 rounded-xl px-1 active:bg-neutral-50"
+          >
+            <span>
+              <span className="block font-semibold text-brand">
+                {t.account.downloadData}
+              </span>
+              <span className="block text-neutral-600">
+                {t.account.downloadHint}
+              </span>
+            </span>
+            <span aria-hidden="true" className="text-neutral-400">
+              ↓
+            </span>
+          </a>
+          <div className="mt-2 border-t border-black/10 pt-2">
+            <DeleteAccountForm locale={locale} />
+          </div>
+        </section>
       </div>
     </EventPageShell>
   );

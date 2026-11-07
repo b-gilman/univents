@@ -9,6 +9,7 @@ import { getCurrentUser, safeNext, supabaseForUser } from "@/lib/server/auth";
 import { getSchool } from "@/lib/schools";
 import { siteUrl } from "@/lib/server/email";
 import { getMessages } from "@/lib/server/locale";
+import { supabaseAdmin } from "@/lib/server/supabase-admin";
 
 export type AuthState = {
   error?: string;
@@ -245,4 +246,32 @@ export async function setEmailReminders(fd: FormData) {
     throw new Error("Couldn't save your reminder setting. Please try again.");
   }
   revalidatePath("/account");
+}
+
+// ----------------------------------------------------------- delete account
+
+export type DeleteState = { error?: string };
+
+// Deletes the student's login. The database then removes everything linked
+// to it automatically: profile (name, school), RSVPs, follows and organiser
+// roles. Needs the full-access client: students can't delete logins themselves.
+export async function deleteAccount(
+  _prev: DeleteState,
+  fd: FormData,
+): Promise<DeleteState> {
+  const t = (await getMessages()).account;
+  const user = await getCurrentUser();
+  if (!user) redirect("/login?next=/account");
+  if (fd.get("confirm") !== "on") return { error: t.deleteFailed };
+
+  const { error } = await supabaseAdmin().auth.admin.deleteUser(user.id);
+  if (error) {
+    console.error("Account deletion failed:", error.message);
+    return { error: t.deleteFailed };
+  }
+
+  // Forget the login on this device.
+  const supabase = await supabaseForUser();
+  await supabase.auth.signOut({ scope: "local" });
+  redirect("/account/deleted");
 }
